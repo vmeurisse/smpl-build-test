@@ -1,0 +1,7 @@
+/build
+/node_modules
+/coverage
+/npm-shrinkwrap.json
+/docs
+/npm-debug.log
+/sauce_connect.log*

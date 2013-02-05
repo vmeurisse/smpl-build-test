@@ -1,0 +1,31 @@
+{
+	"name": "smpl-build-test",
+	"version": "0.0.1",
+	"author": "Vincent Meurisse <dev@meurisse.org>",
+	"description": "Collection of testing scripts for node/browser projects",
+	"keywords": ["build", "simple", "test", "browser", "mocha", "jshint", "coverage", "selenium"],
+	"homepage": "https://github.com/vmeurisse/smpl-build-test",
+	"bugs": {
+		"url": "https://github.com/vmeurisse/smpl-build-test/issues"
+	},
+	"dependencies": {
+		"jake": "0.5.x",
+		"shelljs": "0.1.x",
+		"jshint": "https://github.com/jshint/jshint/archive/1.0.0-rc4.tar.gz"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vmeurisse/smpl-build-test.git"
+	},
+	"scripts": {
+		"test": "jake test"
+	},
+	"files": [
+		"Jakefile.js",
+		"jshint.json",
+		"package.json",
+		"README.md",
+		"smpl-build-test.js"
+	],
+	"main": "smpl-build-test.js"
+}
