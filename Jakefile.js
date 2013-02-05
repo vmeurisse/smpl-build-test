@@ -2,6 +2,9 @@
 /* globals jake: false, task: false */ // Globals exposed by jake
 var path = require('path');
 
+task('test', ['lint'], function() {
+	
+});
 task('lint', [], function() {
 	require('./smpl-build-test');
 	var files = [];
