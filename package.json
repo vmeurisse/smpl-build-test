@@ -11,7 +11,11 @@
 	"dependencies": {
 		"jake": "0.5.x",
 		"shelljs": "0.1.x",
-		"jshint": "https://github.com/jshint/jshint/archive/1.0.0-rc4.tar.gz"
+		"jshint": "https://github.com/jshint/jshint/archive/1.0.0-rc4.tar.gz",
+		"node-static": "0.6.x",
+		"wd": "0.0.x",
+		"sauce-connect-launcher": "~0.1.3",
+		"request": "2.12.x"
 	},
 	"repository": {
 		"type": "git",
