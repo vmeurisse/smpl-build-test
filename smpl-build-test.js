@@ -3,7 +3,7 @@
 /* globals cat: false, config: false, echo: false */ // Globals exposed by shelljs
 
 var path = require('path');
-//var child_process = require('child_process');
+var fs = require('fs');
 require('shelljs/global');
 config.fatal = true; //tell shelljs to fail on errors
 
@@ -13,6 +13,40 @@ var EXIT_CODES = {
 };
 
 namespace('smpl-build-test', function() {
+	task('coverage', [], function(config) {
+		var istanbul = require('istanbul');
+		
+		var files = find(config.src).filter(function (file) {
+			return file.match(/\.js$/);
+		});
+		var instrumenter = new istanbul.Instrumenter();
+		
+		files.forEach(function(file) {
+			var dest = path.resolve(config.dest, path.relative(config.src, file));
+			var destDir = path.dirname(dest);
+			
+			mkdir('-p', destDir);
+			var data = fs.readFileSync(file, 'utf8');
+			var instrumented = instrumenter.instrumentSync(data, file);
+			fs.writeFileSync(dest, instrumented, 'utf8');
+		}, this);
+		console.log('Instrumented ' + files.length + ' files');
+		
+		process.env.SMPL_COVERAGE = '1';
+		
+		var Mocha = require('mocha');
+		
+		var mocha = new Mocha({
+			ui: 'tdd',
+			reporter: path.join(__dirname, 'coverageReporter')
+		});
+		mocha.addFile('./test/testRunnerNode.js');
+
+		// Now, you can run the tests.
+		mocha.run(function(failures){
+			if (failures) fail();
+		});
+	});
 	task('lint', [], function(files, globals) {
 		globals = globals || {};
 		var jshint = require('jshint').JSHINT;

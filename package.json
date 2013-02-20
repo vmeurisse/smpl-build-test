@@ -15,7 +15,9 @@
 		"node-static": "0.6.x",
 		"wd": "0.0.x",
 		"sauce-connect-launcher": "~0.1.3",
-		"request": "2.12.x"
+		"request": "2.12.x",
+		"mocha": "1.8.x",
+		"istanbul": "0.1.x"
 	},
 	"repository": {
 		"type": "git",
@@ -29,7 +31,8 @@
 		"jshint.json",
 		"package.json",
 		"README.md",
-		"smpl-build-test.js"
+		"smpl-build-test.js",
+		"coverageReporter.js"
 	],
 	"main": "smpl-build-test.js"
 }
