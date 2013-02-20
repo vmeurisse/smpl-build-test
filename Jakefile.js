@@ -11,6 +11,7 @@ task('lint', [], function() {
 	files.push(path.join(__dirname, 'Jakefile.js'));
 	files.push(path.join(__dirname, 'package.json'));
 	files.push(path.join(__dirname, 'smpl-build-test.js'));
+	files.push(path.join(__dirname, 'coverageReporter.js'));
 
 	var globals = {
 	};

@@ -1,6 +1,6 @@
 /* jshint node: true, camelcase: false */
 /* globals task: false, fail: false, namespace: false */ // Globals exposed by jake
-/* globals cat: false, config: false, echo: false */ // Globals exposed by shelljs
+/* globals cat: false, config: false, echo: false, mkdir: false, find: false*/ // Globals exposed by shelljs
 
 var path = require('path');
 var fs = require('fs');
@@ -43,7 +43,7 @@ namespace('smpl-build-test', function() {
 		mocha.addFile('./test/testRunnerNode.js');
 
 		// Now, you can run the tests.
-		mocha.run(function(failures){
+		mocha.run(function(failures) {
 			if (failures) fail();
 		});
 	});

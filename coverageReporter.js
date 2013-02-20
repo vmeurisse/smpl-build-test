@@ -1,3 +1,4 @@
+/* jshint node: true, camelcase: false */
 var istanbul = require('istanbul'),
 	Report = istanbul.Report,
 	Collector = istanbul.Collector;
