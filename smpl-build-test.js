@@ -12,6 +12,28 @@ var EXIT_CODES = {
 	sauceConnect: 102
 };
 
+/**
+ * Jake addition. Allows to easily run async tasks without tons of code
+ * @param {String} name  name of the task to run
+ * @param {Array} params parameters to pass to the task (optional)
+ * @param {Function} cb  Callback when the task is finished (optional)
+ */
+jake.invokeTask = function(name, params, cb) {
+	var t = jake.Task[name];
+	
+	if (typeof params === 'function') {
+		cb = params;
+		params = [];
+	}
+	
+	if (cb) {
+		t.addListener('complete', function () {
+			cb();
+		});
+	}
+	t.invoke.apply(t, params);
+};
+
 namespace('smpl-build-test', function() {
 	task('coverage', [], {async: true}, function(config) {
 		var istanbul = require('istanbul');
