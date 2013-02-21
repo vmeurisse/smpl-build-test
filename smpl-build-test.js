@@ -1,4 +1,4 @@
-/* jshint node: true, camelcase: false */
+/* jshint node: true, camelcase: false, latedef: false */
 /* globals jake: false, task: false, fail: false, namespace: false, complete: false */ // Globals exposed by jake
 /* globals cat: false, config: false, echo: false, mkdir: false, find: false*/ // Globals exposed by shelljs
 
@@ -201,6 +201,10 @@ namespace('smpl-build-test', function() {
 			echo('ok');
 		}
 	});
+		
+	task('remote', [], {async: true}, function(config) {
+		new Remote(config).run(complete);
+	});
 });
 
 /**
@@ -217,7 +221,6 @@ namespace('smpl-build-test', function() {
  * @param {String} config.browsers.os
  * @param {String} config.browsers.name
  * @param {String|Number} config.browsers.version
- * @param {Function} onEnd
  * @param {Function} onTest
  */
 var Remote = function(config) {
@@ -291,7 +294,8 @@ Remote.prototype.stopSauceConnect = function() {
 	}
 };
 
-Remote.prototype.run = function() {
+Remote.prototype.run = function(cb) {
+	this.cb = cb;
 	this.startServer();
 	var self = this;
 	this.startSauceConnect(function() {
@@ -441,7 +445,5 @@ Remote.prototype.displayResults = function() {
 	});
 	console.log();
 	console.log();
-	if (this.config.onEnd) this.config.onEnd(failures);
+	if (this.cb) this.cb();
 };
-
-exports.Remote = Remote;
