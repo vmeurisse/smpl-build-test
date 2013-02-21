@@ -1,5 +1,5 @@
 /* jshint node: true, camelcase: false */
-/* globals task: false, fail: false, namespace: false, complete: false */ // Globals exposed by jake
+/* globals jake: false, task: false, fail: false, namespace: false, complete: false */ // Globals exposed by jake
 /* globals cat: false, config: false, echo: false, mkdir: false, find: false*/ // Globals exposed by shelljs
 
 var path = require('path');
@@ -88,6 +88,25 @@ namespace('smpl-build-test', function() {
 		mocha.run(function(failures) {
 			if (failures) fail();
 			process.env.SMPL_COVERAGE = '';
+			complete();
+		});
+	});
+	
+	task('test', [], {async: true}, function(config) {
+		var Mocha = require('mocha');
+		
+		var mocha = new Mocha({
+			ui: 'tdd',
+			reporter: config.reporter
+		});
+		
+		config.tests.forEach(function(file) {
+			mocha.addFile(file);
+		}, this);
+		
+		// Now, you can run the tests.
+		mocha.run(function(failures) {
+			if (failures) fail();
 			complete();
 		});
 	});
