@@ -58,7 +58,9 @@ namespace('smpl-build-test', function() {
 			ui: 'tdd',
 			reporter: reporter
 		});
-		mocha.addFile('./test/testRunnerNode.js');
+		config.tests.forEach(function(file) {
+			mocha.addFile(file);
+		}, this);
 
 		// Now, you can run the tests.
 		mocha.run(function(failures) {
@@ -67,6 +69,7 @@ namespace('smpl-build-test', function() {
 			complete();
 		});
 	});
+	
 	task('lint', [], function(files, globals) {
 		globals = globals || {};
 		var jshint = require('jshint').JSHINT;
