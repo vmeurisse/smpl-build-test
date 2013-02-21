@@ -1,5 +1,5 @@
 /* jshint node: true, camelcase: false */
-/* globals task: false, fail: false, namespace: false */ // Globals exposed by jake
+/* globals task: false, fail: false, namespace: false, complete: false */ // Globals exposed by jake
 /* globals cat: false, config: false, echo: false, mkdir: false, find: false*/ // Globals exposed by shelljs
 
 var path = require('path');
@@ -13,38 +13,58 @@ var EXIT_CODES = {
 };
 
 namespace('smpl-build-test', function() {
-	task('coverage', [], function(config) {
+	task('coverage', [], {async: true}, function(config) {
 		var istanbul = require('istanbul');
+		
+		config.baseDir = config.baseDir || process.cwd();
+		config.src = config.src || path.join(config.baseDir, 'src');
+		config.coverageDir = config.coverageDir || path.join(config.baseDir, 'coverage');
+		var coverageDirSrc = path.join(config.coverageDir, 'src');
+		var dataDir = path.join(config.coverageDir, 'data');
+		mkdir('-p', dataDir);
 		
 		var files = find(config.src).filter(function (file) {
 			return file.match(/\.js$/);
 		});
 		var instrumenter = new istanbul.Instrumenter();
+		var collector = new istanbul.Collector();
 		
 		files.forEach(function(file) {
-			var dest = path.resolve(config.dest, path.relative(config.src, file));
+			var dest = path.resolve(coverageDirSrc, path.relative(config.src, file));
 			var destDir = path.dirname(dest);
 			
 			mkdir('-p', destDir);
 			var data = fs.readFileSync(file, 'utf8');
 			var instrumented = instrumenter.instrumentSync(data, file);
 			fs.writeFileSync(dest, instrumented, 'utf8');
+			
+			var baseline = instrumenter.lastFileCoverage();
+			var coverage = {};
+			coverage[baseline.path] = baseline;
+			collector.add(coverage);
 		}, this);
+		fs.writeFileSync(dataDir + '/baseline.json', JSON.stringify(collector.getFinalCoverage()), 'utf8');
 		console.log('Instrumented ' + files.length + ' files');
 		
+		
 		process.env.SMPL_COVERAGE = '1';
+		
+		var reporter = require('./coverageReporter');
+		reporter.setBaseDir(config.coverageDir);
 		
 		var Mocha = require('mocha');
 		
 		var mocha = new Mocha({
 			ui: 'tdd',
-			reporter: path.join(__dirname, 'coverageReporter')
+			reporter: reporter
 		});
 		mocha.addFile('./test/testRunnerNode.js');
 
 		// Now, you can run the tests.
 		mocha.run(function(failures) {
 			if (failures) fail();
+			process.env.SMPL_COVERAGE = '';
+			complete();
 		});
 	});
 	task('lint', [], function(files, globals) {
