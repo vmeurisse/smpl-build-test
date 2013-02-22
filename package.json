@@ -1,6 +1,6 @@
 {
 	"name": "smpl-build-test",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"author": "Vincent Meurisse <dev@meurisse.org>",
 	"description": "Collection of testing scripts for node/browser projects",
 	"keywords": ["build", "simple", "test", "browser", "mocha", "jshint", "coverage", "selenium"],
