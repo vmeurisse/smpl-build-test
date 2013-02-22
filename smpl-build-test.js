@@ -44,6 +44,14 @@ namespace('smpl-build-test', function() {
 		var coverageDirSrc = path.join(config.coverageDir, 'src');
 		var dataDir = path.join(config.coverageDir, 'data');
 		mkdir('-p', dataDir);
+		if (typeof config.minCoverage === 'number') {
+			config.minCoverage = {
+				statements: config.minCoverage,
+				branches: config.minCoverage,
+				functions: config.minCoverage,
+				lines: config.minCoverage
+			};
+		}
 		
 		var files = find(config.src).filter(function (file) {
 			return file.match(/\.js$/);
@@ -73,6 +81,7 @@ namespace('smpl-build-test', function() {
 		
 		var reporter = require('./coverageReporter');
 		reporter.setBaseDir(config.coverageDir);
+		reporter.setMinCoverage(config.minCoverage);
 		
 		var Mocha = require('mocha');
 		
