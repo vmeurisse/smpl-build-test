@@ -87,12 +87,15 @@ exports.lint = function(config, cb) {
 	config.globals = config.globals || {};
 	var jshint = require('jshint').JSHINT;
 	var options = JSON.parse(shjs.cat(path.join(__dirname, 'jshint.json')));
+	var jsonOptions = Object.create(options);
+	jsonOptions.quotmark = 'double';
 	
 	console.log('Linting ' + config.files.length + ' files...');
 
 	var hasErrors = false;
 	config.files.forEach(function (file) {
-		jshint(shjs.cat(file), options, config.globals);
+		var opts = (file.slice(-5) === '.json') ? jsonOptions : options;
+		jshint(shjs.cat(file), opts, config.globals);
 		var passed = true;
 		var errors = jshint.data().errors;
 		if (errors) {
@@ -116,10 +119,6 @@ exports.lint = function(config, cb) {
 				
 				// Allow double quote string if they contain single quotes
 				if (err.code === 'W109') {
-					// https://github.com/jshint/jshint/issues/824
-					if (err.character === 0) {
-						return;
-					}
 					var i = err.character - 2; //JSHINT use base 1 for column and return the char after the end
 					var singleQuotes = 0;
 					var doubleQuotes = 0;
