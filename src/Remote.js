@@ -1,220 +1,4 @@
 /* jshint node: true, camelcase: false, latedef: false */
-/* globals jake: false, task: false, fail: false, namespace: false, complete: false */ // Globals exposed by jake
-/* globals cat: false, config: false, echo: false, mkdir: false, find: false*/ // Globals exposed by shelljs
-
-var path = require('path');
-var fs = require('fs');
-require('shelljs/global');
-config.fatal = true; //tell shelljs to fail on errors
-
-var EXIT_CODES = {
-	lintFailed: 101,
-	sauceConnect: 102
-};
-
-/**
- * Jake addition. Allows to easily run async tasks without tons of code
- * @param {String} name  name of the task to run
- * @param {Array} params parameters to pass to the task (optional)
- * @param {Function} cb  Callback when the task is finished (optional)
- */
-jake.invokeTask = function(name, params, cb) {
-	var t = jake.Task[name];
-	
-	if (typeof params === 'function') {
-		cb = params;
-		params = [];
-	}
-	
-	if (cb) {
-		t.addListener('complete', function () {
-			cb();
-		});
-	}
-	t.invoke.apply(t, params);
-};
-
-namespace('smpl-build-test', function() {
-	task('coverage', [], {async: true}, function(config) {
-		var istanbul = require('istanbul');
-		
-		config.baseDir = config.baseDir || process.cwd();
-		config.src = config.src || path.join(config.baseDir, 'src');
-		config.coverageDir = config.coverageDir || path.join(config.baseDir, 'coverage');
-		var coverageDirSrc = path.join(config.coverageDir, 'src');
-		var dataDir = path.join(config.coverageDir, 'data');
-		mkdir('-p', dataDir);
-		if (typeof config.minCoverage === 'number') {
-			config.minCoverage = {
-				statements: config.minCoverage,
-				branches: config.minCoverage,
-				functions: config.minCoverage,
-				lines: config.minCoverage
-			};
-		}
-		
-		var files = find(config.src).filter(function (file) {
-			return file.match(/\.js$/);
-		});
-		var instrumenter = new istanbul.Instrumenter();
-		var collector = new istanbul.Collector();
-		
-		files.forEach(function(file) {
-			var dest = path.resolve(coverageDirSrc, path.relative(config.src, file));
-			var destDir = path.dirname(dest);
-			
-			mkdir('-p', destDir);
-			var data = fs.readFileSync(file, 'utf8');
-			var instrumented = instrumenter.instrumentSync(data, file);
-			fs.writeFileSync(dest, instrumented, 'utf8');
-			
-			var baseline = instrumenter.lastFileCoverage();
-			var coverage = {};
-			coverage[baseline.path] = baseline;
-			collector.add(coverage);
-		}, this);
-		fs.writeFileSync(dataDir + '/baseline.json', JSON.stringify(collector.getFinalCoverage()), 'utf8');
-		console.log('Instrumented ' + files.length + ' files');
-		
-		
-		process.env.SMPL_COVERAGE = '1';
-		
-		var reporter = require('./coverageReporter');
-		reporter.setBaseDir(config.coverageDir);
-		reporter.setMinCoverage(config.minCoverage);
-		
-		var Mocha = require('mocha');
-		
-		var mocha = new Mocha({
-			ui: 'tdd',
-			reporter: reporter
-		});
-		config.tests.forEach(function(file) {
-			mocha.addFile(file);
-		}, this);
-
-		// Now, you can run the tests.
-		mocha.run(function(failures) {
-			if (failures) fail();
-			process.env.SMPL_COVERAGE = '';
-			complete();
-		});
-	});
-	
-	task('test', [], {async: true}, function(config) {
-		var Mocha = require('mocha');
-		
-		var mocha = new Mocha({
-			ui: 'tdd',
-			reporter: config.reporter
-		});
-		
-		config.tests.forEach(function(file) {
-			mocha.addFile(file);
-		}, this);
-		
-		// Now, you can run the tests.
-		mocha.run(function(failures) {
-			if (failures) fail();
-			complete();
-		});
-	});
-	
-	task('lint', [], function(files, globals) {
-		globals = globals || {};
-		var jshint = require('jshint').JSHINT;
-		var options = JSON.parse(cat(path.join(__dirname, 'jshint.json')));
-		
-		echo('Linting ' + files.length + ' files...');
-
-		var hasErrors = false;
-		files.forEach(function (file) {
-			jshint(cat(file), options, globals);
-			var passed = true;
-			var errors = jshint.data().errors;
-			if (errors) {
-				errors.forEach(function(err) {
-					if (!err) {
-						return;
-					}
-					// Tabs are counted as 4 spaces for column number.
-					// Lets replace them to get correct results
-					var line = err.evidence.replace(/\t/g, '    ');
-					
-					// ignore trailing spaces on indentation only lines
-					if (err.code === 'W102' && err.evidence.match(/^\t+$/)) {
-						return;
-					}
-					// Do no require {} for one line blocks
-					if (err.code === 'W116' && err.a === '{' &&
-						err.evidence.match(/^\t* *(?:(?:(?:if|for|while) ?\()|else).*;(?:\s*\/\/.*)?$/)) {
-						return;
-					}
-					
-					// Allow double quote string if they contain single quotes
-					if (err.code === 'W109') {
-						// https://github.com/jshint/jshint/issues/824
-						if (err.character === 0) {
-							return;
-						}
-						var i = err.character - 2; //JSHINT use base 1 for column and return the char after the end
-						var singleQuotes = 0;
-						var doubleQuotes = 0;
-						while (i-- > 0) {
-							if (line[i] === "'") singleQuotes++;
-							else if (line[i] === '"') {
-								var nb = 0;
-								while (i-- && line[i] === '\\') nb++;
-								if (nb % 2) doubleQuotes++;
-								else break;
-							}
-						}
-						if (singleQuotes > doubleQuotes) {
-							return;
-						}
-					}
-					
-					// Do not require a space after `function`
-					if (err.code === 'W013' && err.a === 'function') {
-						return;
-					}
-					
-					// bug in jslint: `while(i--);` require a space before `;`
-					if (err.code === 'W013' && line[err.character - 1] === ';') {
-						return;
-					}
-					
-					// Indentation. White option turn this on. Need to fix indentation for switch case before activating
-					if (err.code === 'W015') return;
-					
-					if (passed) {
-						// First error in the file. Display filename
-						echo('\n', file);
-						passed = false;
-						hasErrors = true;
-					}
-					line = '[L' + err.line + ':' + err.code + ']';
-					while (line.length < 15) {
-						line += ' ';
-					}
-					
-					echo(line, err.reason);
-					console.log(err.evidence.replace(/\t/g, '    '));
-					console.log(new Array(err.character).join(' ') + '^');
-				});
-			}
-		});
-		if (hasErrors) {
-			fail('FAIL !!!', EXIT_CODES.lintFailed);
-		} else {
-			echo('ok');
-		}
-	});
-		
-	task('remote', [], {async: true}, function(config) {
-		new Remote(config).run(complete);
-	});
-});
 
 /**
  * Class used to run test on SauceLabs
@@ -286,8 +70,7 @@ Remote.prototype.startSauceConnect = function(cb) {
 	sauceConnectLauncher(options, function (err, sauceConnectProcess) {
 		if (err) {
 			if (!(err + '').match(/Exit code 143/)) {
-				console.log(err);
-				fail('Error launching sauce connect', EXIT_CODES.sauceConnect);
+				cb('Error launching sauce connect: ' + err);
 			}
 			return;
 		}
@@ -307,7 +90,8 @@ Remote.prototype.run = function(cb) {
 	this.cb = cb;
 	this.startServer();
 	var self = this;
-	this.startSauceConnect(function() {
+	this.startSauceConnect(function(err) {
+		if (err) return this.cb(err);
 		self.nbTests = self.config.browsers.length;
 		self.startBrowser(0);
 	});
@@ -454,5 +238,7 @@ Remote.prototype.displayResults = function() {
 	});
 	console.log();
 	console.log();
-	if (this.cb) this.cb();
+	if (this.cb) this.cb(failures);
 };
+
+exports = module.exports = Remote;

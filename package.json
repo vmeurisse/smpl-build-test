@@ -9,7 +9,6 @@
 		"url": "https://github.com/vmeurisse/smpl-build-test/issues"
 	},
 	"dependencies": {
-		"jake": "0.5.x",
 		"shelljs": "0.1.x",
 		"jshint": "https://github.com/jshint/jshint/archive/1.0.0-rc4.tar.gz",
 		"node-static": "0.6.x",
@@ -18,6 +17,9 @@
 		"request": "2.12.x",
 		"mocha": "1.8.x",
 		"istanbul": "0.1.x"
+	},
+	"devDependencies": {
+		"jake": "0.5.x"
 	},
 	"repository": {
 		"type": "git",
@@ -28,11 +30,10 @@
 	},
 	"files": [
 		"Jakefile.js",
-		"jshint.json",
 		"package.json",
 		"README.md",
-		"smpl-build-test.js",
-		"coverageReporter.js"
+		"LICENCE.txt",
+		"src"
 	],
-	"main": "smpl-build-test.js"
+	"main": "src/smpl-build-test.js"
 }

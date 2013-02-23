@@ -1,20 +1,25 @@
-/* jshint node: true, camelcase: false */
-/* globals jake: false, task: false */ // Globals exposed by jake
-var path = require('path');
+/* jshint node: true */
+/* globals jake: false, task: false, fail: false, complete: false */ // Globals exposed by jake
 
-task('test', ['lint'], function() {
+task('test', ['lint']);
+
+task('lint', [], {async: true}, function() {
+	var smplBuild = require('./src/smpl-build-test');
 	
-});
-task('lint', [], function() {
-	require('./smpl-build-test');
-	var files = [];
-	files.push(path.join(__dirname, 'Jakefile.js'));
-	files.push(path.join(__dirname, 'package.json'));
-	files.push(path.join(__dirname, 'smpl-build-test.js'));
-	files.push(path.join(__dirname, 'coverageReporter.js'));
-
+	var files = new jake.FileList();
+	files.include(__dirname + '/*.js');
+	files.include(__dirname + '/*.json');
+	files.include(__dirname + '/src/**/*.json');
+	files.include(__dirname + '/src/**/*.js');
+	
 	var globals = {
 	};
 	
-	jake.Task['smpl-build-test:lint'].invoke(files, globals);
+	smplBuild.lint({
+		files: files.toArray(),
+		globals: globals
+	}, function(err) {
+		if (err) fail();
+		else complete();
+	});
 });

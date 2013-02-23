@@ -41,7 +41,7 @@ exports = module.exports = function (runner) {
 		reporters.forEach(function(reporter) {
 			reporter.writeReport(collector, true);
 		});
-		
+		console.log('\n');
 		if (config.minCoverage) {
 			var errors = [];
 			var actuals = istanbul.utils.summarizeCoverage(collector.getFinalCoverage());
