@@ -17,7 +17,6 @@
 	"maxlen":    120,
 	"white":     true,
 
-	"es5":       true,
 	"smarttabs": true,
 	"lastsemic": true,
 
