@@ -1,6 +1,6 @@
 {
 	"name": "smpl-build-test",
-	"version": "0.1.1",
+	"version": "0.2.0",
 	"author": "Vincent Meurisse <dev@meurisse.org>",
 	"description": "Collection of testing scripts for node/browser projects",
 	"keywords": ["build", "simple", "test", "browser", "mocha", "jshint", "coverage", "selenium"],
@@ -28,12 +28,5 @@
 	"scripts": {
 		"test": "jake test"
 	},
-	"files": [
-		"Jakefile.js",
-		"package.json",
-		"README.md",
-		"LICENCE.txt",
-		"src"
-	],
 	"main": "src/smpl-build-test.js"
 }
