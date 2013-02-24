@@ -50,7 +50,7 @@ exports = module.exports = function (runner) {
 				
 				if (threshold < 0) {
 					var actualUncovered = actuals[key].total - actuals[key].covered;
-					if (threshold * -1 < actualUncovered) {
+					if (-threshold < actualUncovered) {
 						errors.push(supplant(UNCOVERED_LINE, [key, actualUncovered, -threshold]));
 					}
 				} else {

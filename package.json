@@ -16,7 +16,8 @@
 		"sauce-connect-launcher": "~0.1.3",
 		"request": "2.14.x",
 		"mocha": "1.8.x",
-		"istanbul": "0.1.x"
+		"istanbul": "0.1.x",
+		"yuidocjs": "0.3.x"
 	},
 	"devDependencies": {
 		"jake": "0.5.x"
@@ -26,7 +27,8 @@
 		"url": "https://github.com/vmeurisse/smpl-build-test.git"
 	},
 	"scripts": {
-		"test": "jake test"
+		"test": "jake test",
+		"doc": "jake doc"
 	},
 	"main": "src/smpl-build-test.js"
 }

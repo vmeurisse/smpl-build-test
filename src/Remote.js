@@ -1,7 +1,11 @@
 /* jshint node: true, camelcase: false, latedef: false */
 
 /**
- * Class used to run test on SauceLabs
+ * Class used to run tests on SauceLabs
+ * 
+ * @class Remote
+ * @constructor
+ * 
  * @param {Object} config
  * @param {String} config.user username on sauceLabs
  * @param {String} config.key key on sauceLabs
@@ -10,11 +14,11 @@
  * @param {Boolean} config.sauceConnect use Sauce Connect for the tests
  * @param {String} config.url Url to point the browser to before test start
  * @param {String} config.name Name of the test on SauceLabs
- * @param {Array} config.browsers
+ * @param {Array.Object} config.browsers
  * @param {String} config.browsers.os
  * @param {String} config.browsers.name
  * @param {String|Number} config.browsers.version
- * @param {Function} onTest
+ * @param {Function} config.onTest
  */
 var Remote = function(config) {
 	this.config = config;
@@ -28,6 +32,12 @@ var Remote = function(config) {
 	this.status = {};
 };
 
+/**
+ * Start the webserver
+ * 
+ * @method startServer
+ * @private
+ */
 Remote.prototype.startServer = function() {
 	if (!this.server && this.config.port) {
 		var nodeStatic = require('node-static');
@@ -45,6 +55,12 @@ Remote.prototype.startServer = function() {
 	}
 };
 
+/**
+ * Stop the webserver
+ * 
+ * @method stopServer
+ * @private
+ */
 Remote.prototype.stopServer = function() {
 	if (this.server) {
 		this.server.close();
@@ -53,6 +69,12 @@ Remote.prototype.stopServer = function() {
 	}
 };
 
+/**
+ * Start Sauce Connect
+ * 
+ * @method startSauceConnect
+ * @private
+ */
 Remote.prototype.startSauceConnect = function(cb) {
 	if (!this.config.sauceConnect) {
 		cb();
@@ -79,6 +101,12 @@ Remote.prototype.startSauceConnect = function(cb) {
 	});
 };
 
+/**
+ * Stop Sauce Connect
+ * 
+ * @method stopSauceConnect
+ * @private
+ */
 Remote.prototype.stopSauceConnect = function() {
 	if (this.sauceConnect) {
 		this.sauceConnect.close();
@@ -86,6 +114,13 @@ Remote.prototype.stopSauceConnect = function() {
 	}
 };
 
+/**
+ * Run the tests
+ * 
+ * @method run
+ * @param cb {Function} Callback when tests are finished running.
+ * @param cb.failures {Number} Number of browsers that failled
+ */
 Remote.prototype.run = function(cb) {
 	this.cb = cb;
 	this.startServer();
@@ -97,6 +132,15 @@ Remote.prototype.run = function(cb) {
 	});
 };
 
+/**
+ * Start the browser at `index`. When browser is ready, will call `startBrowser(index + 1)` if possible.
+ * 
+ * @method startBrowser
+ * @private
+ * 
+ * @param index {Number} Index of the browser to start. `index` is a reference to `config.browsers` in
+ *        {{#crossLink "Remote"}}{{/crossLink}}
+ */
 Remote.prototype.startBrowser = function(index) {
 	var webdriver = require('wd');
 	
@@ -136,10 +180,18 @@ Remote.prototype.startBrowser = function(index) {
 	});
 };
 
+/**
+ * @method loadUrl
+ * @private
+ */
 Remote.prototype.loadUrl = function(browser, url, cb) {
 	browser.get(url, cb);
 };
 
+/**
+ * @method getBrowserName
+ * @private
+ */
 Remote.prototype.getBrowserName = function(browser) {
 	var name = browser.name;
 	if (browser.version) name += ' ' + browser.version;
@@ -147,12 +199,20 @@ Remote.prototype.getBrowserName = function(browser) {
 	return name;
 };
 
+/**
+ * @method testDone
+ * @private
+ */
 Remote.prototype.testDone = function(browser, name, id, status) {
 	browser.quit();
 	this.status[name] = status;
 	this.report(id, status, name, this.finish.bind(this));
 };
 
+/**
+ * @method finish
+ * @private
+ */
 Remote.prototype.finish = function() {
 	if (0 === --this.nbTests) {
 		this.stopSauceConnect();
@@ -164,6 +224,10 @@ Remote.prototype.finish = function() {
 	}
 };
 
+/**
+ * @method report
+ * @private
+ */
 Remote.prototype.report = function(jobId, status, name, done) {
 	var request = require('request');
 	
@@ -192,6 +256,10 @@ Remote.prototype.report = function(jobId, status, name, done) {
 	});
 };
 
+/**
+ * @method displayResults
+ * @private
+ */
 Remote.prototype.displayResults = function() {
 	var failures = 0;
 	var self = this;
