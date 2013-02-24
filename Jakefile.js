@@ -28,6 +28,7 @@ task('doc', [], {async: true}, function() {
 	smplBuild.document({
 		paths: [__dirname + '/src'],
 		outdir: __dirname + '/docs',
+		basePath: __dirname,
 		project: {
 			dir: __dirname,
 			logo: '../logo.png'

@@ -247,6 +247,7 @@ exports.remote = function(config, cb) {
  * @param config {Object}
  * @param [config.linkNatives] {Boolean} Selects whether to autolink native types such as String and Object over to the
  *        Mozilla Developer Network.
+ * @param config.basePath {String} Project base directory. This part of the path will be hidden from the generated doc
  * @param config.paths {Array.String} Specifies an array of folders to search for source to parse
  * @param [config.exclude] {String} Specify a comma separated list of names you want to exclude from parses when YUIDoc
  *        recurses the source tree
@@ -266,6 +267,8 @@ exports.remote = function(config, cb) {
  */
 exports.document = function(config, cb) {
 	var yuidocjs = require('yuidocjs');
+	//yuidocjs.config.debug = false;
+	
 	config.project = config.project || {};
 	if (config.project.dir) {
 		var packageJson = require(path.join(config.project.dir, 'package.json'));
@@ -275,9 +278,20 @@ exports.document = function(config, cb) {
 		config.project.url = config.project.url || packageJson.homepage;
 		delete config.project.dir;
 	}
+
+	// Avoid having full path in the generated docs
+	var originalDir = process.cwd();
+	if (config.basePath) {
+		process.chdir(config.basePath);
+		delete config.basePath;
+	}
 	
+	for (var i = 0; i < config.paths.length; i++) {
+		config.paths[i] = path.relative(process.cwd(), config.paths[i]) || '.';
+	}
 	var json = (new yuidocjs.YUIDoc(config)).run();
 	if (json.warnings.length) {
+		process.chdir(originalDir);
 		cb('Error parsing doc tags');
 	} else {
 		if (!config.project.logo) {
@@ -286,6 +300,7 @@ exports.document = function(config, cb) {
 		}
 		var builder = new yuidocjs.DocBuilder(config, json);
 		builder.compile(function() {
+			process.chdir(originalDir);
 			cb();
 		});
 	}
