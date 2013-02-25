@@ -1,5 +1,5 @@
 /* jshint node: true, camelcase: false, latedef: false */
-
+'use strict';
 /**
  * Class used to run tests on SauceLabs
  * 
@@ -156,11 +156,11 @@ Remote.prototype.startBrowser = function(index) {
 		tags: this.tags
 	};
 	browser.on('status', function(info) {
-		console.log('%s : \x1b[36m%s\x1b[0m', name, info.trim());
+		console.log('%s : \x1B[36m%s\x1B[0m', name, info.trim());
 	});
 	
 	browser.on('command', function(meth, path) {
-		console.log('%s : > \x1b[33m%s\x1b[0m: %s', name, meth, path);
+		console.log('%s : > \x1B[33m%s\x1B[0m: %s', name, meth, path);
 	});
 	
 	var self = this;
@@ -278,13 +278,13 @@ Remote.prototype.displayResults = function() {
 		var failed = status && status.failed && status.failed.length;
 
 		if (!ok && !failed) {
-			console.log('    %s: \033[31mno results\033[m', name);
+			console.log('    %s: \x1B[31mno results\x1B[m', name);
 			failures++;
 		} else if (failed) {
-			console.log('    %s: \033[31m%d/%d failed\033[m', name, failed, ok + failed);
+			console.log('    %s: \x1B[31m%d/%d failed\x1B[m', name, failed, ok + failed);
 			failures++;
 		} else {
-			console.log('    %s: \033[32m%d passed\033[m', name, ok);
+			console.log('    %s: \x1B[32m%d passed\x1B[m', name, ok);
 		}
 		
 		if (failed) {
@@ -298,7 +298,7 @@ Remote.prototype.displayResults = function() {
 				msg = stack.slice(0, i);
 				console.log();
 				console.log('      %d) %s', ++n, test.fullTitle);
-				console.log('\033[31m%s\033[m', stack.replace(/^/gm, '        '));
+				console.log('\x1B[31m%s\x1B[m', stack.replace(/^/gm, '        '));
 			});
 			console.log();
 			console.log();

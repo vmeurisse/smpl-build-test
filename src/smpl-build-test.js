@@ -6,6 +6,7 @@
  * @class smpl-build-test
  * @static
  */
+'use strict';
 
 var path = require('path');
 var fs = require('fs');
@@ -137,7 +138,8 @@ exports.coverage = function(config, cb) {
 exports.lint = function(config, cb) {
 	config.globals = config.globals || {};
 	var jshint = require('jshint').JSHINT;
-	var options = JSON.parse(shjs.cat(path.join(__dirname, 'jshint.json')));
+	var compress = require('json-compressor');
+	var options = JSON.parse(compress(shjs.cat(path.join(__dirname, 'jshint.json'))));
 	var jsonOptions = Object.create(options);
 	jsonOptions.quotmark = 'double';
 	
@@ -162,7 +164,7 @@ exports.lint = function(config, cb) {
 				if (err.code === 'W102' && err.evidence.match(/^\t+$/)) {
 					return;
 				}
-				// Do no require {} for one line blocks
+				// Do not require {} for one line blocks
 				if (err.code === 'W116' && err.a === '{' &&
 					err.evidence.match(/^\t* *(?:(?:(?:if|for|while) ?\()|else).*;(?:\s*\/\/.*)?$/)) {
 					return;

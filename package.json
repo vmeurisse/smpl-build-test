@@ -17,7 +17,8 @@
 		"request": "2.14.x",
 		"mocha": "1.8.x",
 		"istanbul": "0.1.x",
-		"yuidocjs": "0.3.x"
+		"yuidocjs": "0.3.x",
+		"json-compressor": "0.0.1"
 	},
 	"devDependencies": {
 		"jake": "0.5.x"
@@ -28,6 +29,7 @@
 	},
 	"scripts": {
 		"test": "jake test",
+		"lint": "jake lint",
 		"doc": "jake doc"
 	},
 	"main": "src/smpl-build-test.js"

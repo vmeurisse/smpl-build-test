@@ -1,5 +1,7 @@
 /* jshint node: true, camelcase: false */
 /* globals fail: false */ // Globals exposed by jake
+'use strict';
+
 var istanbul = require('istanbul');
 var fs = require('fs');
 var path = require('path');

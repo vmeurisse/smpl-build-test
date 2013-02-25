@@ -1,24 +1,54 @@
 {
-	"bitwise":   true,
-	"camelcase": true,
-	"curly":     true,
-	"eqeqeq":    true,
-	"forin":     false,
-	"immed":     true,
-	"latedef":   true,
-	"newcap":    true,
-	"noarg":     true,
-	"noempty":   true,
-	"nonew":     true,
-	"quotmark":  "single",
-	"undef":     true,
-	"unused":    true,
-	"trailing":  true,
-	"maxlen":    120,
-	"white":     true,
+	"bitwise":       true,  // disallow bitwise operators: ^ (XOR), | (OR)...
+	"camelcase":     true,  // force all variable names to use either camelCase style or UPPER_CASE with underscores
+	"curly":         true,  // force curly bracket arround blocks. Note: single line if are allowed in the reporter
+	"eqeqeq":        true,  // force use of === and !==
+	"forin":         false, // allow unfiltered for in.
+	"immed":         true,  // force parenthesis when functions are imediately called: (function(){})()
+//	"indent":        1,
+	"latedef":       true,  // do not use variables before their definition
+	"newcap":        true,  // force constructor names to start with an upper case letter
+	"noarg":         true,  // prohibits the use of arguments.caller and arguments.callee
+	"noempty":       true,  // prevent empty blocks
+	"nonew":         true,  // force to store the result of new ...()
+	"plusplus":      false, // allow usage of ++ and --
+	"quotmark":      "single", // force single quotes. Note: the reporter allows double quotes if your string contain single ones
+	"regexp":        false, // allow `.` in regexp
+	"undef":         true,  // prevent usage of undeclared variables
+	"unused":        true,  // prevent unused variables
+	"strict":        false, // Do not force strict mode (yet)
+	"trailing":      true,  // Do not allow trailing spaces
+//	"maxparams":     10,    // Do not force max params in functions. This can be problematic with AMD modules
+//	"maxdepth":      5,
+//	"maxstatements": 40,
+//	"maxcomplexity": 20,
+	"maxlen":        120,   // Max line length
+	"white":         true,
 
-	"smarttabs": true,
-	"lastsemic": true,
+	"asi":           false, // Force use of semicolons
+	"boss":          false, // do not allow things like: `if (a = 10) {}`
+	"debug":         false, // do not allow `debugger` statement
+//	"eqnull":        true,
+	"es5":           false, // disabled because too permissive. It allows trailing commas for exemple
+	"esnext":        false,
+	"evil":          false, // eval is evil, don't use it
+	"expr":          false, // do not allow expression statement like `var a; a === 10;`
+	"funcscope":     false, // you must declare variables in the block where they are used
+	"globalstrict":  false, // do not allow "use strict" in global scope
+	"iterator":      false, // do not allow usage of `__iterator__`
+	"lastsemic":     true,
+	"laxbreak":      false, // prevent usage of unsafe line breaking
+	"laxcomma":      false, // comma goes at the end of the line
+	"loopfunc":      false, // don't create function inside loops
+	"multistr":      false, // do not allow multiline strings
+	"onecase":       false, // switch need to have multiple case. If not, use an if
+	"proto":         false, // don't use `__proto__`
+	"regexdash":     false, // `-` need to be escaped at the end of regexp
+	"scripturl":     false, // don't use `javascript:` urls
+	"smarttabs":     true,  // smart tabs are great. Use them
+	"shadow":        false, // don't hide upper scope variables
+	"sub":           false, // use `.` notation instead of [] when possible
+	"supernew":      false, // don't use weird usages of `new` like `new function() {}`
 
-	"maxerr":    1000
+	"maxerr":        1000
 }

@@ -1,5 +1,6 @@
 /* jshint node: true */
 /* globals jake: false, task: false, fail: false, complete: false */ // Globals exposed by jake
+'use strict';
 
 var smplBuild = require('./src/smpl-build-test');
 
