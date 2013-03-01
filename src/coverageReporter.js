@@ -1,4 +1,3 @@
-/* jshint node: true, camelcase: false */
 /* globals fail: false */ // Globals exposed by jake
 'use strict';
 
@@ -22,6 +21,7 @@ var supplant = function(string, object) {
 };
 var UNCOVERED_LINE = 'ERROR: Uncovered count for {0} ({1}) exceeds threshold ({2})';
 var UNCOVERED_PERCENT = 'ERROR: Coverage for {0} ({1}%) does not meet threshold ({2}%)';
+var COVERAGE_KEY = '__coverage__';
 
 exports = module.exports = function (runner) {
 	runner.on('end', function() {
@@ -31,8 +31,8 @@ exports = module.exports = function (runner) {
 		}));
 		reporters.push(Report.create('text-summary'));
 		
-		var cov = global.__coverage__ || {},
-			collector = new Collector();
+		var cov = global[COVERAGE_KEY] || {},
+		    collector = new Collector();
 		
 		fs.writeFileSync(path.join(config.baseDir, 'data', 'dacoverage.json'), JSON.stringify(cov), 'utf8');
 		var baseline = JSON.parse(fs.readFileSync(path.join(config.baseDir, 'data', 'baseline.json'), 'utf8'));

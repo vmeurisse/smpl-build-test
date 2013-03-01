@@ -1,4 +1,3 @@
-/* jshint node: true, camelcase: false, latedef: false */
 'use strict';
 /**
  * Class used to run tests on SauceLabs
@@ -76,6 +75,7 @@ Remote.prototype.stopServer = function() {
  * @private
  */
 Remote.prototype.startSauceConnect = function(cb) {
+	/* jshint camelcase: false */
 	if (!this.config.sauceConnect) {
 		cb();
 		return;

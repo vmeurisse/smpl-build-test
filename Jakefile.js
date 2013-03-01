@@ -1,4 +1,3 @@
-/* jshint node: true */
 /* globals jake: false, task: false, fail: false, complete: false */ // Globals exposed by jake
 'use strict';
 
@@ -13,13 +12,22 @@ task('lint', [], {async: true}, function() {
 	files.include(__dirname + '/src/**/*.json');
 	files.include(__dirname + '/src/**/*.js');
 	
-	var globals = {
+	var options = {
+		files: files.toArray(),
+		js: {
+			options: {
+				node: true
+			}
+		},
+		fileConfig: {}
+	};
+	options.fileConfig[__dirname + '/src/jshint.json'] = {
+		options: {
+			comments: true
+		}
 	};
 	
-	smplBuild.lint({
-		files: files.toArray(),
-		globals: globals
-	}, function(err) {
+	smplBuild.lint(options, function(err) {
 		if (err) fail();
 		else complete();
 	});
