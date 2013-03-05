@@ -112,7 +112,16 @@ var lintJson = function(filePath, options) {
 exports = module.exports = function(config, cb) {
 	config.js = config.js || {};
 	config.json = config.json || {};
-	config.fileConfig = config.fileConfig || {};
+	
+	if (config.fileConfig) {
+		var fileConfig = config.fileConfig;
+		config.fileConfig = {};
+		for (var file in fileConfig) {
+			config.fileConfig[path.normalize(file)] = fileConfig[file];
+		}
+	} else {
+		config.fileConfig = {};
+	}
 	
 	var compress = require('json-compressor');
 	var jsOptions = JSON.parse(compress(shjs.cat(path.join(__dirname, 'jshint.json'))));
@@ -129,6 +138,8 @@ exports = module.exports = function(config, cb) {
 	var hasErrors = false;
 	config.files.forEach(function (file) {
 		/* jshint bitwise: false */
+		
+		file = path.normalize(file);
 		var fileConfig = config.fileConfig[file] || {};
 		var fileType = fileConfig.type || path.extname(file).slice(1);
 		var options;
