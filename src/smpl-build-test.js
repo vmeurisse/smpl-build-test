@@ -214,6 +214,8 @@ exports.document = function(config, cb) {
 	config.quiet = true;
 	config.extension = config.extension || '.js,.json';
 	var json = (new yuidocjs.YUIDoc(config)).run();
+	process.chdir(originalDir);
+	
 	if (json.warnings.length) {
 		var count = 0;
 		console.log('YUIDoc found', json.warnings.length, 'lint errors in your docs');
@@ -229,9 +231,34 @@ exports.document = function(config, cb) {
 		}
 		var builder = new yuidocjs.DocBuilder(config, json);
 		builder.compile(function() {
-			process.chdir(originalDir);
 			console.log('ok');
 			cb(0);
 		});
 	}
+};
+
+/**
+ * Generate the configuration needed by require.js for a package installed by npmjs
+ * 
+ * @method requireConfig
+ * @param name {String} Name of the package
+ * @param [base] {String} Base used by require.js. If not passed, will return absolute folders
+ * @param req {Function} require function from your module. Needed to correctly find packages.
+ */
+exports.requireConfig = function(name, base, req) {
+	req = req || require;
+	var packageJson = req(name + '/package.json');
+	var location = path.dirname(req.resolve(name + '/package.json'));
+	var main = req.resolve(name);
+	var libDir = path.resolve(location, packageJson.directories && packageJson.directories.lib || location);
+	main = path.relative(libDir, main);
+	if (base) {
+		libDir = path.relative(base, libDir);
+	}
+	
+	return {
+		name: name,
+		location: libDir,
+		main: main
+	};
 };
