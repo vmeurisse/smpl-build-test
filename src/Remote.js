@@ -205,8 +205,11 @@ Remote.prototype.getBrowserName = function(browser) {
  */
 Remote.prototype.testDone = function(browser, name, id, status) {
 	browser.quit();
-	this.status[name] = status;
-	this.report(id, status, name, this.finish.bind(this));
+	this.status[name] = {
+		full: status,
+		simple: this.simplifyReport(status)
+	};
+	this.report(id, this.status[name], name, this.finish.bind(this));
 };
 
 /**
@@ -229,24 +232,21 @@ Remote.prototype.finish = function() {
  * @private
  */
 Remote.prototype.report = function(jobId, status, name, done) {
-	var request = require('request');
+	var Sauce = require('saucelabs');
 	
-	var success = !!(status && status.ok && status.failed && status.ok.length && !status.failed.length);
-	var user = this.config.user;
-	var key = this.config.key;
-	var httpOpts = {
-		url: 'http://' + user + ':' + key + '@saucelabs.com/rest/v1/' + user + '/jobs/' + jobId,
-		method: 'PUT',
-		headers: {
-			'Content-Type': 'text/json'
-		},
-		body: JSON.stringify({
-			passed: success
-		}),
-		jar: false /* disable cookies: they break next request */
-	};
+	var success = !!(status.full && status.full.passed);
 	
-	request(httpOpts, function(err) {
+	var myAccount = new Sauce({
+		username: this.config.user,
+		password: this.config.key
+	});
+	
+	myAccount.updateJob(jobId, {
+		passed: success,
+		'custom-data': {
+			mocha: status.simple // Cannot send full report: http://support.saucelabs.com/entries/23287242
+		}
+	}, function(err) {
 		if (err) {
 			console.log('%s : > job %s: unable to set status:', name, jobId, err);
 		} else {
@@ -254,6 +254,28 @@ Remote.prototype.report = function(jobId, status, name, done) {
 		}
 		done();
 	});
+};
+
+Remote.prototype.simplifyReport = function(report) {
+	if (!report) return report;
+	var simple = {
+		failed: 0,
+		passed: 0,
+		total: 0,
+		runtime: report.durationSec * 1000
+	};
+	var suite = function(s) {
+		if (s.specs) s.specs.forEach(test);
+		if (s.suites) s.suites.forEach(suite);
+	};
+	var test = function(t) {
+		simple.total++;
+		if (t.passed) simple.passed++;
+		else simple.failed++;
+	};
+	suite(report);
+	
+	return simple;
 };
 
 /**
@@ -272,10 +294,10 @@ Remote.prototype.displayResults = function() {
 	console.log();
 	this.config.browsers.forEach(function(browser) {
 		var name = self.getBrowserName(browser);
-		var status = self.status[name];
+		var status = self.status[name].simple;
 		
-		var ok = status && status.ok && status.ok.length;
-		var failed = status && status.failed && status.failed.length;
+		var ok = status && status.passed;
+		var failed = status && status.failed;
 
 		if (!ok && !failed) {
 			console.log('    %s: \x1B[31mno results\x1B[m', name);
