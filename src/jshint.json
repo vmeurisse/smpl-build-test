@@ -44,7 +44,7 @@ https://github.com/jshint/site/blob/newsite/_tables/legacy.table
 	 * 
 	 * Generally, unless you are careful, it is safer to require curly braces around all blocks.
 	 * 
-	 * **JSHint addition**: Do not require braces if statement if on a single line:
+	 * **smpl addition**: Do not require braces if statement if on a single line:
 	 * 
 	 * 	while (day) shuffle();
 	 * 
@@ -181,11 +181,15 @@ https://github.com/jshint/site/blob/newsite/_tables/legacy.table
 	 * There is no advantage in this approach over simply calling `MyConstructor` since
 	 * the object that the operator `new` creates isn't used anywhere so you should
 	 * generally avoid constructors like this one.
+	 * 
+	 * **smpl note**: The created object might stores itself for exemple by registering to events. Removing the `new`
+	 * keyword is a bad idea as it will make `this` to be equal to the global object inside the constructor.
+	 * 
 	 * @property nonew
 	 * @type boolean
 	 * @default true
 	 */
-	"nonew": true,
+	"nonew": false,
 	
 	/**
 	 * This option prohibits the use of unary increment and decrement operators.
