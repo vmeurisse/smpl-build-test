@@ -90,6 +90,8 @@ exports.coverage = function(config, cb) {
 	var collector = new istanbul.Collector();
 	
 	files.forEach(function(file) {
+		file = path.normalize(file);
+		
 		var dest = path.resolve(coverageDirSrc, path.relative(config.src, file));
 		var destDir = path.dirname(dest);
 		
