@@ -16,7 +16,7 @@ if (window.ActiveXObject || !window.postMessage) {
 }
 
 define(['module', '../node_modules/mocha/mocha'], function(module) {
-	// This reporter is a shim over the
+	// This reporter is a wrapper around the HTML reporter that also collect the results
 	var Reporter = function(runner) {
 		new Mocha.reporters.HTML(runner);
 		

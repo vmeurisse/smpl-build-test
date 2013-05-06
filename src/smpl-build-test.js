@@ -8,7 +8,7 @@
 'use strict';
 
 var path = require('path');
-var fs = require('fs');
+
 var shjs = require('shelljs');
 shjs.config.fatal = true; //tell shelljs to fail on errors
 
@@ -66,48 +66,9 @@ var test = exports.test = function(config, cb) {
  * @param cb.failures {Number} Number of test failures
  */
 exports.coverage = function(config, cb) {
-	var istanbul = require('istanbul');
-	
-	config.baseDir = config.baseDir || process.cwd();
-	config.src = config.src || path.join(config.baseDir, 'src');
-	config.coverageDir = config.coverageDir || path.join(config.baseDir, 'coverage');
-	var coverageDirSrc = path.join(config.coverageDir, 'src');
-	var dataDir = path.join(config.coverageDir, 'data');
-	shjs.mkdir('-p', dataDir);
-	if (typeof config.minCoverage === 'number') {
-		config.minCoverage = {
-			statements: config.minCoverage,
-			branches: config.minCoverage,
-			functions: config.minCoverage,
-			lines: config.minCoverage
-		};
-	}
-	
-	var files = shjs.find(config.src).filter(function (file) {
-		return file.match(/\.js$/);
-	});
-	var instrumenter = new istanbul.Instrumenter();
-	var collector = new istanbul.Collector();
-	
-	files.forEach(function(file) {
-		file = path.normalize(file);
-		
-		var dest = path.resolve(coverageDirSrc, path.relative(config.src, file));
-		var destDir = path.dirname(dest);
-		
-		shjs.mkdir('-p', destDir);
-		var data = fs.readFileSync(file, 'utf8');
-		var instrumented = instrumenter.instrumentSync(data, file);
-		fs.writeFileSync(dest, instrumented, 'utf8');
-		
-		var baseline = instrumenter.lastFileCoverage();
-		var coverage = {};
-		coverage[baseline.path] = baseline;
-		collector.add(coverage);
-	}, this);
-	fs.writeFileSync(dataDir + '/baseline.json', JSON.stringify(collector.getFinalCoverage()), 'utf8');
-	console.log('Instrumented ' + files.length + ' files');
-	
+	var coverage = require('./coverage');
+	coverage.normalizeConfig(config);
+	coverage.prepare(config);
 	
 	process.env.SMPL_COVERAGE = '1';
 	

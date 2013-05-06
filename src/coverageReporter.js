@@ -1,72 +1,23 @@
-/* globals fail: false */ // Globals exposed by jake
 'use strict';
 
-var istanbul = require('istanbul');
 var fs = require('fs');
 var path = require('path');
 
-var Report = istanbul.Report;
-var Collector = istanbul.Collector;
+var coverage = require('./coverage');
 
 var config = {
 	baseDir: './coverage',
 	minCoverage: null
 };
 
-var supplant = function(string, object) {
-	return string.replace(/\{(\w+)\}/g, function(match, key) {
-		var replacer = object[key];
-		return (replacer !== undefined) ? replacer : match;
-	});
-};
-var UNCOVERED_LINE = 'ERROR: Uncovered count for {0} ({1}) exceeds threshold ({2})';
-var UNCOVERED_PERCENT = 'ERROR: Coverage for {0} ({1}%) does not meet threshold ({2}%)';
 var COVERAGE_KEY = '__coverage__';
 
 exports = module.exports = function (runner) {
 	runner.on('end', function() {
-		var reporters = [];
-		reporters.push(Report.create('html', {
-			dir: path.join(config.baseDir, 'html-report')
-		}));
-		reporters.push(Report.create('text-summary'));
-		
-		var cov = global[COVERAGE_KEY] || {},
-		    collector = new Collector();
-		
+		var cov = global[COVERAGE_KEY] || {};
 		fs.writeFileSync(path.join(config.baseDir, 'data', 'dacoverage.json'), JSON.stringify(cov), 'utf8');
-		var baseline = JSON.parse(fs.readFileSync(path.join(config.baseDir, 'data', 'baseline.json'), 'utf8'));
 		
-		collector.add(cov);
-		collector.add(baseline);
-		
-		reporters.forEach(function(reporter) {
-			reporter.writeReport(collector, true);
-		});
-		console.log('\n');
-		if (config.minCoverage) {
-			var errors = [];
-			var actuals = istanbul.utils.summarizeCoverage(collector.getFinalCoverage());
-			Object.keys(config.minCoverage).forEach(function (key) {
-				var threshold = config.minCoverage[key];
-				
-				if (threshold < 0) {
-					var actualUncovered = actuals[key].total - actuals[key].covered;
-					if (-threshold < actualUncovered) {
-						errors.push(supplant(UNCOVERED_LINE, [key, actualUncovered, -threshold]));
-					}
-				} else {
-					var actual = actuals[key].pct;
-					if (actual < threshold) {
-						errors.push(supplant(UNCOVERED_PERCENT, [key, actual, threshold]));
-					}
-				}
-			});
-			if (errors.length) {
-				console.error(errors.join('\n'));
-				fail();
-			}
-		}
+		coverage.report(config);
 	});
 };
 
