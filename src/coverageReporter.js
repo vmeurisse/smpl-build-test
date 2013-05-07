@@ -15,7 +15,7 @@ var COVERAGE_KEY = '__coverage__';
 exports = module.exports = function (runner) {
 	runner.on('end', function() {
 		var cov = global[COVERAGE_KEY] || {};
-		fs.writeFileSync(path.join(config.coverageDir, 'data', 'dacoverage.json'), JSON.stringify(cov), 'utf8');
+		fs.writeFileSync(path.join(config.coverageDir, 'data', 'node_coverage.json'), JSON.stringify(cov), 'utf8');
 		coverage.report(config);
 	});
 };
