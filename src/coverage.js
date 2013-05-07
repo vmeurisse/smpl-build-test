@@ -71,12 +71,12 @@ coverage.report = function(config) {
 	
 	var reporters = [];
 	reporters.push(Report.create('html', {
-		dir: path.join(config.baseDir, 'html-report')
+		dir: path.join(config.coverageDir, 'html-report')
 	}));
 	reporters.push(Report.create('text-summary'));
 	
 	var collector = new Collector();
-	shjs.find(path.join(config.baseDir, 'data')).forEach(function (file) {
+	shjs.find(path.join(config.coverageDir, 'data')).forEach(function (file) {
 		if (file.match(/\.json$/)) {
 			var cov = JSON.parse(fs.readFileSync(file, 'utf8'));
 			collector.add(cov);

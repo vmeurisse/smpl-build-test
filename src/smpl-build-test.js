@@ -73,7 +73,7 @@ exports.coverage = function(config, cb) {
 	process.env.SMPL_COVERAGE = '1';
 	
 	var reporter = require('./coverageReporter');
-	reporter.setBaseDir(config.coverageDir);
+	reporter.setCoverageDir(config.coverageDir);
 	reporter.setMinCoverage(config.minCoverage);
 	
 	test({
