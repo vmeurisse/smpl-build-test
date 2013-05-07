@@ -1,4 +1,7 @@
 'use strict';
+
+var Server = require('./Server');
+
 /**
  * Class used to run tests on SauceLabs
  * 
@@ -39,15 +42,8 @@ var Remote = function(config) {
  */
 Remote.prototype.startServer = function() {
 	if (!this.server && this.config.port) {
-		var nodeStatic = require('node-static');
-		var file = new nodeStatic.Server(this.config.path);
-		this.server = require('http').createServer(function (request, response) {
-			request.addListener('end', function () {
-				file.serve(request, response);
-			});
-		});
-		this.server.listen(this.config.port);
-		
+		this.server = new Server(this.config);
+		this.server.start();
 		if (this.config.url) {
 			console.log('server ready: ' + this.config.url);
 		}
@@ -62,7 +58,7 @@ Remote.prototype.startServer = function() {
  */
 Remote.prototype.stopServer = function() {
 	if (this.server) {
-		this.server.close();
+		this.server.stop();
 		delete this.server;
 		console.log('server stoped');
 	}
