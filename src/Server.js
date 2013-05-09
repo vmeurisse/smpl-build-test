@@ -33,25 +33,25 @@ Server.prototype.stop = function() {
 
 Server.prototype.handleRequest = function (staticServer, request, response) {
 	if (request.url === '/postResults' && this.config.coverageDir) {
-		if (request.method == 'POST') {
+		if (request.method === 'POST') {
 			var qs = require('querystring');
 			var body = '';
 			request.on('data', function (data) {
 				body += data;
 			});
-			request.on('end', (function () {
+			request.on('end', function () {
 				var postData = qs.parse(body);
 				if (postData.coverage) {
 					console.log('Adding data for ' + (request.headers['user-agent'] || 'unknown broser'));
-					var filename = (Math.random()*99999999).toFixed(0) + '.json';
+					var filename = (Math.random() * 99999999).toFixed(0) + '.json';
 					filename = path.join(this.config.coverageDir, 'data', filename);
 					fs.writeFile(filename, postData.coverage, function (err) {
 						if (err) throw err;
 						response.writeHead(200);
-						response.end("ok\n");
+						response.end('ok\n');
 					});
 				}
-			}).bind(this));
+			}.bind(this));
 		}
 	} else {
 		request.addListener('end', function () {
