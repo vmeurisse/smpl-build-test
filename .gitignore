@@ -1,7 +1,14 @@
-/build
 /node_modules
-/coverage
 /npm-shrinkwrap.json
+/build
+/coverage
 /docs
 /npm-debug.log
 /sauce_connect.log*
+
+# Windows crap
+Thumbs.db
+
+# Eclipse project files
+/.project
+/.settings
