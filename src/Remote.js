@@ -1,7 +1,5 @@
 'use strict';
 
-var Server = require('./Server');
-
 /**
  * Class used to run tests on SauceLabs
  * 
@@ -11,8 +9,6 @@ var Server = require('./Server');
  * @param {Object} config
  * @param {String} config.user username on sauceLabs
  * @param {String} config.key key on sauceLabs
- * @param {String} config.path Path to use as root web folder when calling `Remote.startServer`
- * @param {Number} config.port Port to use for web server when calling `Remote.startServer`
  * @param {Boolean} config.sauceConnect use Sauce Connect for the tests
  * @param {String} config.url Url to point the browser to before test start
  * @param {String} config.name Name of the test on SauceLabs
@@ -32,36 +28,6 @@ var Remote = function(config) {
 		this.tags.push('custom', '' + Math.floor(Math.random() * 100000000));
 	}
 	this.status = {};
-};
-
-/**
- * Start the webserver
- * 
- * @method startServer
- * @private
- */
-Remote.prototype.startServer = function() {
-	if (!this.server && this.config.port) {
-		this.server = new Server(this.config);
-		this.server.start();
-		if (this.config.url) {
-			console.log('server ready: ' + this.config.url);
-		}
-	}
-};
-
-/**
- * Stop the webserver
- * 
- * @method stopServer
- * @private
- */
-Remote.prototype.stopServer = function() {
-	if (this.server) {
-		this.server.stop();
-		delete this.server;
-		console.log('server stoped');
-	}
 };
 
 /**
@@ -119,10 +85,9 @@ Remote.prototype.stopSauceConnect = function() {
  */
 Remote.prototype.run = function(cb) {
 	this.cb = cb;
-	this.startServer();
 	var self = this;
 	this.startSauceConnect(function(err) {
-		if (err) return this.cb(err);
+		if (err) return self.cb(err);
 		self.nbTests = self.config.browsers.length;
 		self.startBrowser(0);
 	});
@@ -215,7 +180,6 @@ Remote.prototype.testDone = function(browser, name, id, status) {
 Remote.prototype.finish = function() {
 	if (0 === --this.nbTests) {
 		this.stopSauceConnect();
-		this.stopServer();
 		var self = this;
 		setTimeout(function() {
 			self.displayResults();

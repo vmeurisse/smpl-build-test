@@ -1,29 +1,17 @@
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-
-var coverage = require('./coverage');
-
-var config = {
-	coverageDir: './coverage',
-	minCoverage: null
-};
+var coverage;
 
 var COVERAGE_KEY = '__coverage__';
 
 exports = module.exports = function (runner) {
 	runner.on('end', function() {
 		var cov = global[COVERAGE_KEY] || {};
-		fs.writeFileSync(path.join(config.coverageDir, 'data', 'node_coverage.json'), JSON.stringify(cov), 'utf8');
-		coverage.report(config);
+		coverage.writeFile(JSON.stringify(cov), 'node_coverage.json');
+		coverage.report();
 	});
 };
 
-exports.setCoverageDir = function(coverageDir) {
-	config.coverageDir = coverageDir;
-};
-
-exports.setMinCoverage = function(minCoverage) {
-	config.minCoverage = minCoverage;
+exports.setCoverage = function(cov) {
+	coverage = cov;
 };

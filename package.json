@@ -19,7 +19,8 @@
 		"istanbul": "0.1.x",
 		"yuidocjs": "0.3.x",
 		"json-compressor": "~0.0.1",
-		"json-lint": "0.1.x"
+		"json-lint": "0.1.x",
+		"async": "~0.2.8"
 	},
 	"devDependencies": {
 		"jake": "0.5.x"

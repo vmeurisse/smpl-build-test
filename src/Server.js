@@ -22,6 +22,7 @@ var Server = function(config) {
 };
 
 Server.prototype.start = function() {
+	console.log('starting server');
 	var nodeStatic = require('node-static');
 	var staticServer = new nodeStatic.Server(this.config.path, {headers: NO_KEEP_ALIVE});
 	this.server = require('http').createServer(this.handleRequest.bind(this, staticServer));

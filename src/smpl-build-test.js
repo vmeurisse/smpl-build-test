@@ -13,80 +13,6 @@ var shjs = require('shelljs');
 shjs.config.fatal = true; //tell shelljs to fail on errors
 
 /**
- * Wraper arround [mocha](http://visionmedia.github.com/mocha/)
- * 
- * @method test
- * @param config {Object}
- * @param [config.reporter] {String|function} reporter to use for mocha
- * @param [config.globals] {Array.String} List of globals to ignore for the leak detection
- * @param config.tests {Array.String} Path of the files to use for tests
- * @param cb {Function} cb when the tests are finished
- * @param cb.failures {Number} Number of test failures
- */
-var test = exports.test = function(config, cb) {
-	var Mocha = require('mocha');
-	
-	var mocha = new Mocha({
-		ui: 'tdd',
-		reporter: config.reporter,
-		globals: config.globals
-	});
-	config.tests.forEach(function(file) {
-		// Force reimport
-		require.cache[require.resolve(file)] = null;
-		mocha.addFile(file);
-	}, this);
-	
-	// Now, you can run the tests.
-	mocha.run(function(failures) {
-		cb(failures);
-	});
-};
-
-/**
- * Test coverage using [mocha](http://visionmedia.github.com/mocha/) and
- * [istanbul](https://github.com/gotwarlost/istanbul)
- * 
- * @method coverage
- * @param config {Object}
- * @param [config.globals] {Array<String>} See {{#crossLink "smpl-build-test/test:method"}}{{/crossLink}}
- * @param config.tests {Array.String} {{#crossLink "smpl-build-test/test:method"}}{{/crossLink}}
- * @param [config.baseDir=process.cwd()] {String} Base project directory
- * @param [config.src=`config.baseDir`/src] {String} Source folder to instrument
- * @param [config.coverageDir=`config.baseDir`/coverage] {String} Folder to use for instrumented source and coverage
- *         results
- * @param [config.minCoverage] {Number|Object} Fail if coverage is lower than `minCoverage`. Positive values are treated
- *        as a minimum percentage of coverage. Negative values are a maximum number of uncovered lines.  
- *        Setting this a a number has the same effect as setting all four properties to the same value
- * @param [config.minCoverage.statements] {Number}
- * @param [config.minCoverage.branches] {Number}
- * @param [config.minCoverage.functions] {Number}
- * @param [config.minCoverage.lines] {Number}
- * @param cb {Function} Callback when the coverage report is ready
- * @param cb.failures {Number} Number of test failures
- */
-exports.coverage = function(config, cb) {
-	var coverage = require('./coverage');
-	coverage.normalizeConfig(config);
-	coverage.prepare(config);
-	
-	process.env.SMPL_COVERAGE = '1';
-	
-	var reporter = require('./coverageReporter');
-	reporter.setCoverageDir(config.coverageDir);
-	reporter.setMinCoverage(config.minCoverage);
-	
-	test({
-		tests: config.tests,
-		globals: config.globals,
-		reporter: reporter
-	}, function(err) {
-		process.env.SMPL_COVERAGE = '';
-		cb(err);
-	});
-};
-
-/**
  * Lint files using [JSHint](http://jshint.com/) and [json-lint](https://npmjs.org/package/json-lint)
  * 
  * @method lint
@@ -111,17 +37,19 @@ exports.lint = function(config, cb) {
 	require('./lint')(config, cb);
 };
 
+
 /**
- * Run tests on remote browsers using [SauceLabs](https://saucelabs.com/)
+ * Run unit tests
  * 
- * @method remote
- * @param config {Object} config for {{#crossLink "Remote"}}{{/crossLink}}
+ * @method tests
+ * @param config {Object} config. See {{#crossLink "Tests"}}{{/crossLink}}
  * @param cb {Function} Callback when tests are finished running.
- * @param cb.failures {Number} Number of browsers that failled
+ * @param cb.err {*} Errors, if any.
+ * @return {Object} If `config.manualStop` is `true`, return an object with a `stop` method.
  */
-exports.remote = function(config, cb) {
-	var Remote = require('./Remote');
-	new Remote(config).run(cb);
+exports.tests = function(config, cb) {
+	var Tests = require('./Tests');
+	return new Tests(config).run(cb);
 };
 
 /**
