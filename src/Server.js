@@ -56,7 +56,7 @@ Server.prototype.handleRequest = function (staticServer, request, response) {
 	} else {
 		request.addListener('end', function () {
 			staticServer.serve(request, response);
-		});
+		}).resume();
 	}
 };
 
