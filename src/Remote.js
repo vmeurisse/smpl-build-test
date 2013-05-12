@@ -6,17 +6,19 @@
  * @class Remote
  * @constructor
  * 
- * @param {Object} config
- * @param {String} config.user username on sauceLabs
- * @param {String} config.key key on sauceLabs
- * @param {Boolean} config.sauceConnect use Sauce Connect for the tests
- * @param {String} config.url Url to point the browser to before test start
- * @param {String} config.name Name of the test on SauceLabs
- * @param {Array.Object} config.browsers
- * @param {String} config.browsers.os
- * @param {String} config.browsers.name
- * @param {String|Number} config.browsers.version
- * @param {Function} config.onTest
+ * @param config {Object}
+ * @param [config.webdriverURL='ondemand.saucelabs.com'] {String}
+ * @param [config.webdriverPort=80] {String}
+ * @param [config.user] {String} username for sauceLabs
+ * @param [config.key] {String} key on sauceLabs
+ * @param [config.sauceConnect] {Boolean} use Sauce Connect proxy
+ * @param config.url {String} Url to point the browser to before test start
+ * @param config.name {String} Name of the test on SauceLabs
+ * @param config.browsers {Array.Object}
+ * @param config.browsers.os {String}
+ * @param config.browsers.name {String}
+ * @param config.browsers.version {String|Number}
+ * @param config.onTest {Function}
  */
 var Remote = function(config) {
 	this.config = config;
@@ -106,7 +108,12 @@ Remote.prototype.startBrowser = function(index) {
 	var webdriver = require('wd');
 	
 	var b = this.config.browsers[index];
-	var browser = webdriver.remote('ondemand.saucelabs.com', 80, this.config.user, this.config.key);
+	var browser = webdriver.remote(
+			this.config.webdriverURL || 'ondemand.saucelabs.com',
+			this.config.webdriverPort || 80,
+			this.config.user,
+			this.config.key
+	);
 	var name = this.getBrowserName(b);
 	var desired = {
 		name: this.config.name + ' - ' + name,
@@ -192,28 +199,32 @@ Remote.prototype.finish = function() {
  * @private
  */
 Remote.prototype.report = function(jobId, status, name, done) {
-	var Sauce = require('saucelabs');
-	
-	var success = !!(status.full && status.full.passed);
-	
-	var myAccount = new Sauce({
-		username: this.config.user,
-		password: this.config.key
-	});
-	
-	myAccount.updateJob(jobId, {
-		passed: success,
-		'custom-data': {
-			mocha: status.simple // Cannot send full report: http://support.saucelabs.com/entries/23287242
-		}
-	}, function(err) {
-		if (err) {
-			console.log('%s : > job %s: unable to set status:', name, jobId, err);
-		} else {
-			console.log('%s : > job %s marked as %s', name, jobId, success ? 'passed' : 'failed');
-		}
+	if (!this.config.webdriverURL) {
+		var Sauce = require('saucelabs');
+		
+		var success = !!(status.full && status.full.passed);
+		
+		var myAccount = new Sauce({
+			username: this.config.user,
+			password: this.config.key
+		});
+		
+		myAccount.updateJob(jobId, {
+			passed: success,
+			'custom-data': {
+				mocha: status.simple // Cannot send full report: http://support.saucelabs.com/entries/23287242
+			}
+		}, function(err) {
+			if (err) {
+				console.log('%s : > job %s: unable to set status:', name, jobId, err);
+			} else {
+				console.log('%s : > job %s marked as %s', name, jobId, success ? 'passed' : 'failed');
+			}
+			done();
+		});
+	} else {
 		done();
-	});
+	}
 };
 
 Remote.prototype.simplifyReport = function(report) {
