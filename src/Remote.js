@@ -219,7 +219,8 @@ Remote.prototype.report = function(jobId, status, name, done) {
 			if (err) {
 				console.log('%s: > job %s: \x1B[31munable to set status:\x1B[m', name, jobId, err);
 			} else {
-				console.log('%s: > job %s marked as %s', name, jobId, success ? '\x1B[32mpassed\x1B[m' : '\x1B[31mfailed\x1B[m');
+				console.log('%s: > job %s marked as %s', name, jobId,
+						success ? '\x1B[32mpassed\x1B[m' : '\x1B[31mfailed\x1B[m');
 			}
 			done();
 		});
