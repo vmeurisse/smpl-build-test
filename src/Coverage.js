@@ -83,9 +83,10 @@ Coverage.prototype.prepare = function() {
  * @method writeFile
  * 
  * @param data {String} Coverage report
- * @param filename {String} name of the file
+ * @param [filename] {String} name of the file
  */
 Coverage.prototype.writeFile = function(data, filename) {
+	filename = filename || (Math.random() * 99999999).toFixed(0) + '.json';
 	fs.writeFileSync(path.join(this.config.coverageDir, 'data', filename), data, 'utf8');
 };
 

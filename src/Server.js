@@ -1,7 +1,4 @@
 
-var path = require('path');
-var fs = require('fs');
-
 // This prevent the browser to keep the connection open. It allows the server to exit quickly.
 var NO_KEEP_ALIVE = {
 	Connection: 'close'
@@ -19,6 +16,7 @@ var NO_KEEP_ALIVE = {
  */
 var Server = function(config) {
 	this.config = config;
+	this.coverage = null;
 };
 
 Server.prototype.start = function() {
@@ -37,8 +35,12 @@ Server.prototype.stop = function() {
 	}
 };
 
-Server.prototype.handleRequest = function (staticServer, request, response) {
-	if (request.url === '/postResults' && this.config.coverageDir && request.method === 'POST') {
+Server.prototype.setCoverage = function(coverage) {
+	this.coverage = coverage;
+};
+
+Server.prototype.handleRequest = function(staticServer, request, response) {
+	if (request.url === '/postResults' && this.coverage && request.method === 'POST') {
 		var qs = require('querystring');
 		var body = '';
 		request.on('data', function (data) {
@@ -47,14 +49,10 @@ Server.prototype.handleRequest = function (staticServer, request, response) {
 		request.on('end', function () {
 			var postData = qs.parse(body);
 			if (postData.coverage) {
-				console.log('Adding data for ' + (request.headers['user-agent'] || 'unknown broser'));
-				var filename = (Math.random() * 99999999).toFixed(0) + '.json';
-				filename = path.join(this.config.coverageDir, 'data', filename);
-				fs.writeFile(filename, postData.coverage, function (err) {
-					if (err) throw err;
-					response.writeHead(200, NO_KEEP_ALIVE);
-					response.end('ok\n');
-				});
+				console.log('Adding coverage data for ' + (request.headers['user-agent'] || 'unknown browser'));
+				this.coverage.writeFile(postData.coverage);
+				response.writeHead(200, NO_KEEP_ALIVE);
+				response.end('ok\n');
 			} else {
 				response.writeHead(400, NO_KEEP_ALIVE);
 				response.end('Missing coverage data.\n');

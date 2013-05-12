@@ -79,9 +79,46 @@ define(['module', '../node_modules/mocha/mocha'], function(module) {
 		});
 		
 		runner.on('end', function() {
+			postCoverage();
 			window.mochaResults = result.suites[0];
 			delete window.mochaResults.description;
 		});
+	};
+	
+	var stringify = window.JSON && JSON.stringify || function (obj) {
+		var t = typeof obj;
+		if (t !== 'object' || obj === null) {
+			if (t === 'string') obj = '"' + obj.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+			return '' + obj;
+		} else {
+			var json = [], arr = (obj.constructor === Array);
+			for (var k in obj) {
+				json.push((arr ? '' : stringify(k) + ':') + stringify(obj[k]));
+			}
+			return (arr ? '[' : '{') + json + (arr ? ']' : '}');
+		}
+	};
+	
+	var postCoverage = function() {
+		var COVERAGE_KEY = '__coverage__';
+		if (window[COVERAGE_KEY]) {
+			// Poor man AJAX
+			var iframe = document.createElement('iframe');
+			iframe.style.display = 'none';
+			iframe.name = 'smpl_coverage_results';
+			document.body.appendChild(iframe);
+			var input = document.createElement('input');
+			input.name = 'coverage';
+			input.value = stringify(window[COVERAGE_KEY]);
+			var form = document.createElement('form');
+			form.method = 'post';
+			form.target = 'smpl_coverage_results';
+			form.action = location.protocol + '//' + location.host + '/postResults';
+			form.appendChild(input);
+			form.style.display = 'none';
+			document.body.appendChild(form);
+			form.submit();
+		}
 	};
 	
 	mocha.setup('tdd');
@@ -94,5 +131,17 @@ define(['module', '../node_modules/mocha/mocha'], function(module) {
 	link.href = module.uri.split('/').slice(0, -1).join('/') + '/../node_modules/mocha/mocha.css';
 	document.getElementsByTagName('head')[0].appendChild(link);
 	
+	function getQueryParam(key) {
+		var match = location.search.match('[?&]' + key + '=([^#$&]*)');
+		return match && match[1];
+	}
+	if (getQueryParam('coverage') === 'true') {
+		window.process = {
+			env: {
+				SMPL_COVERAGE: '1'
+			}
+		};
+	}
+		
 	return mocha;
 });

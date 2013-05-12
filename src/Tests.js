@@ -108,6 +108,7 @@ Tests.prototype.prepareCoverage = function(cb) {
 	var Coverage = require('./Coverage');
 	this.coverage = new Coverage(this.config.coverage);
 	this.coverage.prepare();
+	if (this.server) this.server.setCoverage(this.coverage);
 	cb();
 };
 
