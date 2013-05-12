@@ -99,6 +99,7 @@ define(['module', '../node_modules/mocha/mocha'], function(module) {
 		}
 	};
 	
+	window.smpl_coverage_results = ''; //Prevent mocha to detect the iframe as new global
 	var postCoverage = function() {
 		var COVERAGE_KEY = '__coverage__';
 		if (window[COVERAGE_KEY]) {
