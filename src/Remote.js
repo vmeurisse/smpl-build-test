@@ -200,10 +200,10 @@ Remote.prototype.finish = function() {
  * @private
  */
 Remote.prototype.report = function(jobId, status, name, done) {
+	var success = !!(status.full && status.full.passed);
+	
 	if (!this.config.webdriverURL) {
 		var Sauce = require('saucelabs');
-		
-		var success = !!(status.full && status.full.passed);
 		
 		var myAccount = new Sauce({
 			username: this.config.user,
@@ -217,13 +217,14 @@ Remote.prototype.report = function(jobId, status, name, done) {
 			}
 		}, function(err) {
 			if (err) {
-				console.log('%s : > job %s: unable to set status:', name, jobId, err);
+				console.log('%s: > job %s: \x1B[31munable to set status:\x1B[m', name, jobId, err);
 			} else {
-				console.log('%s : > job %s marked as %s', name, jobId, success ? 'passed' : 'failed');
+				console.log('%s: > job %s marked as %s', name, jobId, success ? '\x1B[32mpassed\x1B[m' : '\x1B[31mfailed\x1B[m');
 			}
 			done();
 		});
 	} else {
+		console.log('%s: > job %s: %s', name, jobId, success ? '\x1B[32mpassed\x1B[m' : '\x1B[31mfailed\x1B[m');
 		done();
 	}
 };
