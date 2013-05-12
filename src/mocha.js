@@ -99,21 +99,21 @@ define(['module', '../node_modules/mocha/mocha'], function(module) {
 		}
 	};
 	
-	window.smpl_coverage_results = ''; //Prevent mocha to detect the iframe as new global
+	window.smplCoverageResults = ''; //Prevent mocha to detect the iframe as new global
 	var postCoverage = function() {
 		var COVERAGE_KEY = '__coverage__';
 		if (window[COVERAGE_KEY]) {
 			// Poor man AJAX
 			var iframe = document.createElement('iframe');
 			iframe.style.display = 'none';
-			iframe.name = 'smpl_coverage_results';
+			iframe.name = 'smplCoverageResults';
 			document.body.appendChild(iframe);
 			var input = document.createElement('input');
 			input.name = 'coverage';
 			input.value = stringify(window[COVERAGE_KEY]);
 			var form = document.createElement('form');
 			form.method = 'post';
-			form.target = 'smpl_coverage_results';
+			form.target = 'smplCoverageResults';
 			form.action = location.protocol + '//' + location.host + '/postResults';
 			form.appendChild(input);
 			form.style.display = 'none';
