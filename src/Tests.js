@@ -114,7 +114,7 @@ Tests.prototype.prepareCoverage = function(cb) {
 
 Tests.prototype.runRemote = function(cb) {
 	var Remote = require('./Remote');
-	new Remote(this.config.remote).run(cb);
+	new Remote(this.config.remote).run(!!this.coverage, cb);
 };
 
 module.exports = Tests;

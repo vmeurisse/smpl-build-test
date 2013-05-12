@@ -12,13 +12,20 @@
  * @param [config.user] {String} username for sauceLabs
  * @param [config.key] {String} key on sauceLabs
  * @param [config.sauceConnect] {Boolean} use Sauce Connect proxy
- * @param config.url {String} Url to point the browser to before test start
+ * @param [config.url] {String} Url of the tests. Used by the default `onTest` method. The parameter `coverage=true`
+ *                     will be automatically added when testing coverage.
+ * @param [config.onTest] {Function} You can overide the default test method. It get the following parameters:
+ * @param config.onTest.browser {wd} See [API here](https://github.com/admc/wd)
+ * @param config.onTest.coverage {boolean} If true, you should run the tests twice (1 for normal tests, 1 for coverage)
+ * @param config.onTest.cb {Function}
+ * @param config.onTest.cb.status {Object} Status of the tests. API is the
+ *                                 [advanced format here](https://saucelabs.com/docs/javascript-unit-tests-integration)
+ * @param [config.onTest.cb.statusCoverage] {Object} If you ran in coverage mode. Same format as `status`
  * @param config.name {String} Name of the test on SauceLabs
  * @param config.browsers {Array.Object}
  * @param config.browsers.platform {String}
  * @param config.browsers.browserName {String}
  * @param config.browsers.version {String|Number}
- * @param config.onTest {Function}
  */
 var Remote = function(config) {
 	this.config = config;
@@ -82,11 +89,20 @@ Remote.prototype.stopSauceConnect = function() {
  * Run the tests
  * 
  * @method run
+ * @param coverage {boolean} If true, should also run test with coverage
  * @param cb {Function} Callback when tests are finished running.
  * @param cb.failures {Number} Number of browsers that failled
  */
-Remote.prototype.run = function(cb) {
+Remote.prototype.run = function(coverage, cb) {
 	this.cb = cb;
+	this.coverage = coverage;
+	if (coverage && this.config.url) {
+		var url = require('url');
+		var u = url.parse(this.config.url);
+		u.search = (u.search ? u.search + '&' : '?') + 'coverage=true';
+		this.coverageUrl = url.format(u);
+	}
+
 	var self = this;
 	this.startSauceConnect(function(err) {
 		if (err) return self.cb(err);
@@ -137,12 +153,9 @@ Remote.prototype.startBrowser = function(index) {
 			console.log('%s: \x1B[31m%s\x1B[0m (%s)', name, err.message, JSON.stringify(desired));
 			testDone(null);
 		} else {
-			var onTest = this.config.onTest.bind(null, browser, testDone);
-			if (this.config.url) {
-				this.loadUrl(browser, this.config.url, onTest);
-			} else {
-				onTest();
-			}
+			var onTest = this.config.onTest ? this.config.onTest.bind(null) : this.onTest.bind(this);
+			onTest(browser, this.coverage, testDone);
+			
 			if (this.config.browsers[index + 1]) {
 				process.nextTick(function() {
 					this.startBrowser(index + 1);
@@ -153,11 +166,32 @@ Remote.prototype.startBrowser = function(index) {
 };
 
 /**
- * @method loadUrl
+ * @method onTest
  * @private
  */
-Remote.prototype.loadUrl = function(browser, url, cb) {
-	browser.get(url, cb);
+Remote.prototype.onTest = function(browser, coverage, cb) {
+	var cover = function(url, cb) {
+		browser.get(url, function() {
+			browser.waitForCondition('!!window.mochaResults', 30000, 1000, function() {
+				/* jshint evil: true */
+				browser['eval']('window.mochaResults', function(err, res) {
+					cb(res);
+				});
+			});
+		});
+	};
+	
+	var coverageUrl = this.coverageUrl;
+	cover(this.config.url, function(status) {
+		if (coverage) {
+			cover(coverageUrl, function(statusCoverage) {
+				cb(status, statusCoverage);
+			});
+		} else {
+			cb(status);
+		}
+	});
+		
 };
 
 /**
@@ -175,9 +209,9 @@ Remote.prototype.getBrowserName = function(browser) {
  * @method testDone
  * @private
  */
-Remote.prototype.testDone = function(browser, name, id, status) {
+Remote.prototype.testDone = function(browser, name, id, status, statusCoverage) {
 	browser.quit();
-	this.status[name] = this.getReport(status);
+	this.status[name] = this.getReport(status, statusCoverage);
 	this.report(id, this.status[name], name, this.finish.bind(this));
 };
 
@@ -230,8 +264,9 @@ Remote.prototype.report = function(jobId, status, name, done) {
 	}
 };
 
-Remote.prototype.getReport = function(fullReport) {
+Remote.prototype.getReport = function(fullReport, fullReportCoverage) {
 	if (!fullReport) return {};
+	var prefix = '';
 	
 	var simple = {
 		failed: 0,
@@ -251,11 +286,23 @@ Remote.prototype.getReport = function(fullReport) {
 			simple.passed++;
 		} else {
 			errors.push(t.mochaTest);
+			t.mochaTest.fullTitle = prefix + t.mochaTest.fullTitle;
 			delete t.mochaTest;
 			simple.failed++;
 		}
 	};
 	suite(fullReport);
+	if (fullReportCoverage) {
+		prefix = 'coverage: ';
+		suite(fullReportCoverage);
+		fullReport.description = 'standard';
+		fullReport.description = 'coverage';
+		fullReport = {
+			suites: [fullReport, fullReportCoverage],
+			durationSec: fullReport.durationSec + fullReportCoverage.durationSec,
+			passed: fullReport.passed && fullReportCoverage.passed
+		};
+	}
 	
 	return {
 		simple: simple,
