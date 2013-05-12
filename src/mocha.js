@@ -17,6 +17,8 @@ if (window.ActiveXObject || !window.postMessage) {
 
 define(['module', '../node_modules/mocha/mocha'], function(module) {
 	// This reporter is a wrapper around the HTML reporter that also collect the results
+	// Result format is the advanced format described here:
+	// https://saucelabs.com/docs/javascript-unit-tests-integration
 	var Reporter = function(runner) {
 		new Mocha.reporters.HTML(runner);
 		
@@ -49,6 +51,7 @@ define(['module', '../node_modules/mocha/mocha'], function(module) {
 		runner.on('test', function() {
 			testStart = new Date();
 		});
+		
 		runner.on('test end', function(test) {
 			if (!currentSuite.specs) currentSuite.specs = [];
 			var t = {
@@ -63,6 +66,14 @@ define(['module', '../node_modules/mocha/mocha'], function(module) {
 				currentSuite.passed = false;
 				t.failedCount = 1;
 				t.passedCount = 0;
+				// Format addition. Used for error reporting in the console.
+				t.mochaTest = {
+					fullTitle: test.fullTitle(),
+					err: {
+						message: test.err.message,
+						stack: test.err.stack
+					}
+				};
 			}
 			currentSuite.specs.push(t);
 		});

@@ -135,7 +135,7 @@ Remote.prototype.startBrowser = function(index) {
 		var testDone = this.testDone.bind(this, browser, name, sessionID);
 		if (err) {
 			console.log('%s: \x1B[31m%s\x1B[0m (%s)', name, err.message, JSON.stringify(desired));
-			testDone({});
+			testDone(null);
 		} else {
 			var onTest = this.config.onTest.bind(null, browser, testDone);
 			if (this.config.url) {
@@ -177,10 +177,7 @@ Remote.prototype.getBrowserName = function(browser) {
  */
 Remote.prototype.testDone = function(browser, name, id, status) {
 	browser.quit();
-	this.status[name] = {
-		full: status,
-		simple: this.simplifyReport(status)
-	};
+	this.status[name] = this.getReport(status);
 	this.report(id, this.status[name], name, this.finish.bind(this));
 };
 
@@ -231,26 +228,38 @@ Remote.prototype.report = function(jobId, status, name, done) {
 	}
 };
 
-Remote.prototype.simplifyReport = function(report) {
-	if (!report) return report;
+Remote.prototype.getReport = function(fullReport) {
+	if (!fullReport) return {};
+	
 	var simple = {
 		failed: 0,
 		passed: 0,
 		total: 0,
-		runtime: report.durationSec * 1000
+		runtime: fullReport.durationSec * 1000
 	};
+	var errors = [];
+	
 	var suite = function(s) {
 		if (s.specs) s.specs.forEach(test);
 		if (s.suites) s.suites.forEach(suite);
 	};
 	var test = function(t) {
 		simple.total++;
-		if (t.passed) simple.passed++;
-		else simple.failed++;
+		if (t.passed) {
+			simple.passed++;
+		} else {
+			errors.push(t.mochaTest);
+			delete t.mochaTest;
+			simple.failed++;
+		}
 	};
-	suite(report);
+	suite(fullReport);
 	
-	return simple;
+	return {
+		simple: simple,
+		full: fullReport,
+		errors: errors
+	};
 };
 
 /**
@@ -259,7 +268,6 @@ Remote.prototype.simplifyReport = function(report) {
  */
 Remote.prototype.displayResults = function() {
 	var failures = 0;
-	var self = this;
 	console.log();
 	console.log();
 	console.log('**********************************');
@@ -268,11 +276,11 @@ Remote.prototype.displayResults = function() {
 	console.log();
 	console.log();
 	this.config.browsers.forEach(function(browser) {
-		var name = self.getBrowserName(browser);
-		var status = self.status[name].simple;
+		var name = this.getBrowserName(browser);
+		var status = this.status[name];
 		
-		var ok = status && status.passed;
-		var failed = status && status.failed;
+		var ok = status.simple && status.simple.passed;
+		var failed = status.simple && status.simple.failed;
 
 		if (!ok && !failed) {
 			console.log('    %s: \x1B[31mno results\x1B[m', name);
@@ -285,22 +293,17 @@ Remote.prototype.displayResults = function() {
 		}
 		
 		if (failed) {
-			failed = status.failed;
 			var n = 0;
-			failed.forEach(function(test) {
-				var err = test.error;
-				var msg = err.message || '';
-				var stack = err.stack || msg;
-				var i = stack.indexOf(msg) + msg.length;
-				msg = stack.slice(0, i);
+			status.errors.forEach(function(test) {
+				var stack = test.err.stack || test.err.message || '';
 				console.log();
 				console.log('      %d) %s', ++n, test.fullTitle);
-				console.log('\x1B[31m%s\x1B[m', stack.replace(/^/gm, '        '));
-			});
-			console.log();
-			console.log();
+				if (stack) console.log('\x1B[31m%s\x1B[m', stack.replace(/^/gm, '        '));
+				console.log();
+				console.log();
+			}, this);
 		}
-	});
+	}, this);
 	console.log();
 	console.log();
 	if (this.cb) this.cb(failures);
