@@ -136,10 +136,8 @@ define(['module', '../node_modules/mocha/mocha'], function(module) {
 		return match && match[1];
 	}
 	if (getQueryParam('coverage') === 'true') {
-		window.process = {
-			env: {
-				SMPL_COVERAGE: '1'
-			}
+		window.process.env = {
+			SMPL_COVERAGE: '1'
 		};
 	}
 		
