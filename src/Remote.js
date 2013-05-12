@@ -124,28 +124,32 @@ Remote.prototype.startBrowser = function(index) {
 		tags: this.tags
 	};
 	browser.on('status', function(info) {
-		console.log('%s : \x1B[36m%s\x1B[0m', name, info.trim());
+		console.log('%s: \x1B[36m%s\x1B[0m', name, info.trim());
 	});
 	
 	browser.on('command', function(meth, path) {
-		console.log('%s : > \x1B[33m%s\x1B[0m: %s', name, meth, path);
+		console.log('%s: > \x1B[33m%s\x1B[0m: %s', name, meth, path);
 	});
 	
-	var self = this;
 	browser.init(desired, function(err, sessionID) {
-		var testDone = self.testDone.bind(self, browser, name, sessionID);
-		var onTest = self.config.onTest.bind(null, browser, testDone);
-		if (self.config.url) {
-			self.loadUrl(browser, self.config.url, onTest);
+		var testDone = this.testDone.bind(this, browser, name, sessionID);
+		if (err) {
+			console.log('%s: \x1B[31m%s\x1B[0m (%s)', name, err.message, JSON.stringify(desired));
+			testDone({});
 		} else {
-			onTest();
+			var onTest = this.config.onTest.bind(null, browser, testDone);
+			if (this.config.url) {
+				this.loadUrl(browser, this.config.url, onTest);
+			} else {
+				onTest();
+			}
+			if (this.config.browsers[index + 1]) {
+				process.nextTick(function() {
+					this.startBrowser(index + 1);
+				}.bind(this));
+			}
 		}
-		if (self.config.browsers[index + 1]) {
-			process.nextTick(function() {
-				self.startBrowser(index + 1);
-			});
-		}
-	});
+	}.bind(this));
 };
 
 /**
