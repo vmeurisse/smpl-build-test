@@ -15,8 +15,8 @@
  * @param config.url {String} Url to point the browser to before test start
  * @param config.name {String} Name of the test on SauceLabs
  * @param config.browsers {Array.Object}
- * @param config.browsers.os {String}
- * @param config.browsers.name {String}
+ * @param config.browsers.platform {String}
+ * @param config.browsers.browserName {String}
  * @param config.browsers.version {String|Number}
  * @param config.onTest {Function}
  */
@@ -117,8 +117,8 @@ Remote.prototype.startBrowser = function(index) {
 	var name = this.getBrowserName(b);
 	var desired = {
 		name: this.config.name + ' - ' + name,
-		browserName: b.name,
-		platform: b.os,
+		browserName: b.browserName,
+		platform: b.platform,
 		version: b.version,
 		build: this.id,
 		tags: this.tags
@@ -165,9 +165,9 @@ Remote.prototype.loadUrl = function(browser, url, cb) {
  * @private
  */
 Remote.prototype.getBrowserName = function(browser) {
-	var name = browser.name;
+	var name = browser.browserName;
 	if (browser.version) name += ' ' + browser.version;
-	if (browser.os) name += ' (' + browser.os + ')';
+	if (browser.platform) name += ' (' + browser.platform + ')';
 	return name;
 };
 
