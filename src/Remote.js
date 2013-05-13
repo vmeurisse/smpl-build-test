@@ -150,7 +150,9 @@ Remote.prototype.startBrowser = function(index) {
 	browser.init(desired, function(err, sessionID) {
 		var testDone = this.testDone.bind(this, browser, name, sessionID);
 		if (err) {
-			console.log('%s: \x1B[31m%s\x1B[0m (%s)', name, err.message, JSON.stringify(desired));
+			console.log('%s: \x1B[31m%s\x1B[0m (%s)', name, err.message);
+			console.log(' > Requested browser:', desired);
+			console.log(' > Error:', err);
 			testDone(null);
 		} else {
 			var onTest = this.config.onTest ? this.config.onTest.bind(null) : this.onTest.bind(this);
