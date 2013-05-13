@@ -157,12 +157,12 @@ Remote.prototype.startBrowser = function(index) {
 		} else {
 			var onTest = this.config.onTest ? this.config.onTest.bind(null) : this.onTest.bind(this);
 			onTest(browser, this.coverage, testDone);
-			
-			if (this.config.browsers[index + 1]) {
-				process.nextTick(function() {
-					this.startBrowser(index + 1);
-				}.bind(this));
-			}
+		}
+		
+		if (this.config.browsers[index + 1]) {
+			process.nextTick(function() {
+				this.startBrowser(index + 1);
+			}.bind(this));
 		}
 	}.bind(this));
 };
