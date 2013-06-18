@@ -26,6 +26,8 @@ var UNCOVERED_PERCENT = 'ERROR: Coverage for {0} ({1}%) does not meet threshold 
  * @param [config.src=`config.baseDir`/src] {String} Source folder to instrument
  * @param [config.coverageDir=`config.baseDir`/coverage] {String} Folder to use for instrumented source and coverage
  *         results
+ * @param [config.copyall=false] {Boolean} Copy files that are not covered to the output dir. Useful if your JS files
+ *         are using some resources.
  * @param [config.minCoverage] {Number|Object} Fail if coverage is lower than `minCoverage`. Positive values are treated
  *        as a minimum percentage of coverage. Negative values are a maximum number of uncovered lines.  
  *        Setting this a a number has the same effect as setting all four properties to the same value
@@ -51,13 +53,20 @@ Coverage.prototype.prepare = function() {
 	shjs.rm('-rf', dataDir);
 	shjs.mkdir('-p', dataDir);
 	
-	var files = shjs.find(this.config.src).filter(function (file) {
-		return file.match(/\.js$/);
-	});
+	var files = shjs.find(this.config.src);
 	var instrumenter = new istanbul.Instrumenter();
 	var collector = new istanbul.Collector();
 	
-	files.forEach(function(file) {
+	process.stdout.write('Instrumenting files');
+	var filesPerDot = Math.ceil(files.length / 50);
+	
+	files.forEach(function(file, index) {
+		var instrument = file.match(/\.js$/);
+		
+		if (index % filesPerDot === 0) process.stdout.write('.');
+		
+		if (!instrument && !this.config.copyall) return;
+		
 		file = path.normalize(file);
 		
 		var dest = path.resolve(coverageDirSrc, path.relative(this.config.src, file));
@@ -65,16 +74,20 @@ Coverage.prototype.prepare = function() {
 		
 		shjs.mkdir('-p', destDir);
 		var data = fs.readFileSync(file, 'utf8');
-		var instrumented = instrumenter.instrumentSync(data, file);
-		fs.writeFileSync(dest, instrumented, 'utf8');
 		
-		var baseline = instrumenter.lastFileCoverage();
-		var coverage = {};
-		coverage[baseline.path] = baseline;
-		collector.add(coverage);
+		if (instrument) {
+			data = instrumenter.instrumentSync(data, file);
+			var baseline = instrumenter.lastFileCoverage();
+			var coverage = {};
+			coverage[baseline.path] = baseline;
+			collector.add(coverage);
+		}
+		
+		fs.writeFileSync(dest, data, 'utf8');
+		
 	}, this);
 	fs.writeFileSync(dataDir + '/baseline.json', JSON.stringify(collector.getFinalCoverage()), 'utf8');
-	console.log('Instrumented ' + files.length + ' files');
+	process.stdout.write(' ok\n');
 };
 
 /**
