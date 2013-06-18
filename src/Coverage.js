@@ -20,7 +20,9 @@ var UNCOVERED_PERCENT = 'ERROR: Coverage for {0} ({1}%) does not meet threshold 
 /**
  * Wraper around [istanbul](https://github.com/gotwarlost/istanbul) for code coverage.
  * 
- * @method coverage
+ * @class Coverage
+ * @constructor
+ * 
  * @param config {Object}
  * @param [config.baseDir=process.cwd()] {String} Base project directory
  * @param [config.src=`config.baseDir`/src] {String} Source folder to instrument
@@ -28,6 +30,14 @@ var UNCOVERED_PERCENT = 'ERROR: Coverage for {0} ({1}%) does not meet threshold 
  *         results
  * @param [config.copyall=false] {Boolean} Copy files that are not covered to the output dir. Useful if your JS files
  *         are using some resources.
+ * @param [config.filter] {Function} Method used to check if a file/folder need to be processed. The method should
+ *                         return a boolean. Returning true on a directory just create or not a directory in
+ *                         the destination folder. Returning false as no effect (It doesn't stop the processing of the
+ *                         files in that directory). It take the following parameters:
+ * @param config.filter.file {Object}
+ * @param config.filter.file.path {String} Full path of the file
+ * @param config.filter.file.relative {String} Path relative from the base dir
+ * @param config.filter.file.stat {fs.Stat} Info on the file/directory
  * @param [config.minCoverage] {Number|Object} Fail if coverage is lower than `minCoverage`. Positive values are treated
  *        as a minimum percentage of coverage. Negative values are a maximum number of uncovered lines.  
  *        Setting this a a number has the same effect as setting all four properties to the same value
@@ -60,8 +70,22 @@ Coverage.prototype.prepare = function() {
 	process.stdout.write('Instrumenting files');
 	var filesPerDot = Math.ceil(files.length / 50);
 	
+	if (!this.config.filter) {
+		this.config.filter = function(file) {
+			return file.stat.isFile() && file.path.match(/\.js$/);
+		};
+	}
+	
 	files.forEach(function(file, index) {
-		var instrument = file.match(/\.js$/);
+		var stat = fs.statSync(file);
+		var relPath = path.relative(this.config.src, file);
+		if (path.sep === '\\') relPath = relPath.replace(/\\/g, '/');
+		
+		var instrument = this.config.filter({
+			path: file,
+			stat: stat,
+			relative: relPath
+		});
 		
 		if (index % filesPerDot === 0) process.stdout.write('.');
 		
@@ -69,22 +93,24 @@ Coverage.prototype.prepare = function() {
 		
 		file = path.normalize(file);
 		
-		var dest = path.resolve(coverageDirSrc, path.relative(this.config.src, file));
+		var dest = path.resolve(coverageDirSrc, relPath);
 		var destDir = path.dirname(dest);
 		
 		shjs.mkdir('-p', destDir);
-		var data = fs.readFileSync(file, 'utf8');
 		
-		if (instrument) {
-			data = instrumenter.instrumentSync(data, file);
-			var baseline = instrumenter.lastFileCoverage();
-			var coverage = {};
-			coverage[baseline.path] = baseline;
-			collector.add(coverage);
+		if (stat.isFile()) {
+			var data = fs.readFileSync(file, 'utf8');
+			
+			if (instrument) {
+				data = instrumenter.instrumentSync(data, file);
+				var baseline = instrumenter.lastFileCoverage();
+				var coverage = {};
+				coverage[baseline.path] = baseline;
+				collector.add(coverage);
+			}
+			
+			fs.writeFileSync(dest, data, 'utf8');
 		}
-		
-		fs.writeFileSync(dest, data, 'utf8');
-		
 	}, this);
 	fs.writeFileSync(dataDir + '/baseline.json', JSON.stringify(collector.getFinalCoverage()), 'utf8');
 	process.stdout.write(' ok\n');
