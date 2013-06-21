@@ -1,5 +1,6 @@
 'use strict';
 
+var colorize = require('./color').auto;
 /**
  * Class used to run tests on SauceLabs
  * 
@@ -91,7 +92,7 @@ Remote.prototype.stopSauceConnect = function() {
  * @method run
  * @param coverage {boolean} If true, should also run test with coverage
  * @param cb {Function} Callback when tests are finished running.
- * @param cb.failures {Number} Number of browsers that failled
+ * @param cb.failures {Number} Number of browsers that failed
  */
 Remote.prototype.run = function(coverage, cb) {
 	this.cb = cb;
@@ -140,17 +141,17 @@ Remote.prototype.startBrowser = function(index) {
 		tags: this.tags
 	};
 	browser.on('status', function(info) {
-		console.log('%s: \x1B[36m%s\x1B[0m', name, info.trim());
+		console.log('%s: ' + colorize('cyan', '%s'), name, info.trim());
 	});
 	
 	browser.on('command', function(meth, path) {
-		console.log('%s: > \x1B[33m%s\x1B[0m: %s', name, meth, path);
+		console.log('%s: > ' + colorize('yellow', '%s') + ': %s', name, meth, path);
 	});
 	
 	browser.init(desired, function(err, sessionID) {
 		var testDone = this.testDone.bind(this, browser, name, sessionID);
 		if (err) {
-			console.log('%s: \x1B[31m%s\x1B[0m (%s)', name, err.message);
+			console.log('%s: ' + colorize('red', '%s') + ' (%s)', name, err.message);
 			console.log(' > Requested browser:', desired);
 			console.log(' > Error:', err);
 			testDone(null);
@@ -253,15 +254,15 @@ Remote.prototype.report = function(jobId, status, name, done) {
 			}
 		}, function(err) {
 			if (err) {
-				console.log('%s: > job %s: \x1B[31munable to set status:\x1B[m', name, jobId, err);
+				console.log('%s: > job %s: ' + colorize('red', 'unable to set status:'), name, jobId, err);
 			} else {
 				console.log('%s: > job %s marked as %s', name, jobId,
-						success ? '\x1B[32mpassed\x1B[m' : '\x1B[31mfailed\x1B[m');
+						success ? colorize('green', 'passed') : colorize('red', 'failed'));
 			}
 			done();
 		});
 	} else {
-		console.log('%s: > job %s: %s', name, jobId, success ? '\x1B[32mpassed\x1B[m' : '\x1B[31mfailed\x1B[m');
+		console.log('%s: > job %s: %s', name, jobId, success ? colorize('green', 'passed') : colorize('red', 'failed'));
 		done();
 	}
 };
@@ -332,15 +333,15 @@ Remote.prototype.displayResults = function() {
 		
 		var ok = status.simple && status.simple.passed;
 		var failed = status.simple && status.simple.failed;
-
+		
 		if (!ok && !failed) {
-			console.log('    %s: \x1B[31mno results\x1B[m', name);
+			console.log('    %s: ' +  colorize('red', 'no results'), name);
 			failures++;
 		} else if (failed) {
-			console.log('    %s: \x1B[31m%d/%d failed\x1B[m', name, failed, ok + failed);
+			console.log('    %s: ' + colorize('red', '%d/%d failed'), name, failed, ok + failed);
 			failures++;
 		} else {
-			console.log('    %s: \x1B[32m%d passed\x1B[m', name, ok);
+			console.log('    %s: ' + colorize('green', '%d passed'), name, ok);
 		}
 		
 		if (failed) {
@@ -349,9 +350,11 @@ Remote.prototype.displayResults = function() {
 				var stack = test.err.stack || test.err.message || '';
 				console.log();
 				console.log('      %d) %s', ++n, test.fullTitle);
-				if (stack) console.log('\x1B[31m%s\x1B[m', stack.replace(/^/gm, '        '));
-				console.log();
-				console.log();
+				if (stack) {
+					console.log(colorize('red', '%s'), stack.replace(/^/gm, '        '));
+					console.log();
+					console.log();
+				}
 			}, this);
 		}
 	}, this);
