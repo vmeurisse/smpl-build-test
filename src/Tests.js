@@ -48,7 +48,13 @@ Tests.prototype.run = function(cb) {
 		if (this.actions.autoStop) {
 			this.stop();
 		}
-		if (cb) cb(err);
+		if (cb) {
+			// Small delay so that all messages get time to be written to console before reurning to caller 
+			setTimeout(function() {
+				cb(err);
+			}, 100);
+		}
+		
 	}.bind(this));
 	
 	
