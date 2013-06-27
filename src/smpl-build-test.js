@@ -42,14 +42,13 @@ exports.lint = function(config, cb) {
  * Run unit tests
  * 
  * @method tests
- * @param config {Object} config. See {{#crossLink "Tests"}}{{/crossLink}}
+ * @param config {Object} config. See [paraffin](https://npmjs.org/package/paraffin) project.
  * @param cb {Function} Callback when tests are finished running.
  * @param cb.err {*} Errors, if any.
  * @return {Object} If `config.manualStop` is `true`, return an object with a `stop` method.
  */
 exports.tests = function(config, cb) {
-	var Tests = require('./Tests');
-	return new Tests(config).run(cb);
+	return require('paraffin').tests(config, cb);
 };
 
 /**

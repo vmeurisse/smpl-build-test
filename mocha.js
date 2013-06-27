@@ -1,4 +1,4 @@
 /* globals define */
-define(['./src/mocha'], function(mocha) {
+define(['paraffin/mocha'], function(mocha) {
 	return mocha;
 });
