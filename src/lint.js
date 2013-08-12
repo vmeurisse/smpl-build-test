@@ -77,6 +77,9 @@ var lintJS = function(filePath, options, globals) {
 			// Indentation. White option turn this on. Need to fix indentation for switch case before activating
 			if (err.code === 'W015') return;
 			
+			// JSHint is considering `(!a === !b)` confusing. I don't ;)
+			if (err.code === 'W018') return;
+			
 			if (!hasErrors) {
 				// First error in the file. Display filename
 				console.log('\n' + filePath);
