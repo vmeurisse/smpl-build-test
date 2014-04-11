@@ -1,6 +1,12 @@
 smpl-build-test
 ===============
 
+Changelog
+---------
+
+ - v0.8.0 2014-04-11:
+   - [SECURITY] Update paraffin to v0.9.2. Fix Heartbleed (CVE-2014-0160) bug when using Sauce Connect
+
 Links
 -----
 
