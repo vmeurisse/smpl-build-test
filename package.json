@@ -28,5 +28,8 @@
 		"lint": "jake lint",
 		"doc": "jake doc"
 	},
-	"main": "src/smpl-build-test.js"
+	"main": "src/smpl-build-test.js",
+	"engines": {
+		"node": ">=0.8.0"
+	}
 }
