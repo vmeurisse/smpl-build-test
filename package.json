@@ -10,14 +10,14 @@
 	},
 	"dependencies": {
 		"paraffin": "~0.9.2",
-		"shelljs": "0.1.x",
+		"shelljs": "0.2.x",
 		"jshint": "1.0.x",
 		"yuidocjs": "0.3.x",
 		"json-compressor": "~0.0.1",
 		"json-lint": "0.1.x"
 	},
 	"devDependencies": {
-		"jake": "0.5.x"
+		"jake": "0.7.x"
 	},
 	"repository": {
 		"type": "git",
