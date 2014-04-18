@@ -10,7 +10,7 @@ Changelog
 Links
 -----
 
-[![Build status](https://secure.travis-ci.org/vmeurisse/smpl-build-test.png?branch=master)](http://travis-ci.org/vmeurisse/smpl-build-test)
+[![Build status](https://travis-ci.org/vmeurisse/smpl-build-test.svg?branch=master)](http://travis-ci.org/vmeurisse/smpl-build-test)
 
 [Code statistics](https://www.ohloh.net/p/smpl-build-test)
 
